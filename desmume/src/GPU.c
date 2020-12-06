@@ -704,7 +704,7 @@ static BOOL setFinalColorSpecialDecreaseWnd (const GPU *gpu, u32 passing, u8 bgn
 /*****************************************************************************/
 
 /* render a text background to the combined pixelbuffer */
-INLINE void renderline_textBG(const GPU * gpu, u8 num, u8 * dst, u32 Y, u16 XBG, u16 YBG, u16 LG)
+static INLINE void renderline_textBG(const GPU * gpu, u8 num, u8 * dst, u32 Y, u16 XBG, u16 YBG, u16 LG)
 {
 	struct _BGxCNT * bgCnt = &(gpu->dispx_st)->dispx_BGxCNT[num].bits;
 	struct _DISPCNT * dispCnt = &(gpu->dispx_st)->dispx_DISPCNT.bits;

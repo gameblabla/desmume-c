@@ -18,8 +18,8 @@
  * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#include "SDL.h"
-#include "SDL_thread.h"
+#include <SDL/SDL.h>
+#include <SDL/SDL_thread.h>
 #include <stdlib.h>
 #include <string.h>
 #include <libgen.h>
@@ -53,6 +53,7 @@
 #include "../ctrlssdl.h"
 #include "../render3D.h"
 #include "../gdbstub.h"
+#include "../opengl_collector_3Demu.h"
 
 volatile BOOL execute = FALSE;
 
@@ -80,7 +81,8 @@ SoundInterface_struct *SNDCoreList[] = {
 };
 
 GPU3DInterface *core3DList[] = {
-&gpu3DNull
+&gpu3D_opengl_collector
+//&gpu3DNull
 };
 
 
@@ -103,9 +105,6 @@ const u16 cli_kb_cfg[NB_KEYS] =
   };
 
 struct my_config {
-  u16 arm9_gdb_port;
-  u16 arm7_gdb_port;
-
   int disable_sound;
 
 #ifdef INCLUDE_OPENGL_2D
@@ -122,9 +121,6 @@ struct my_config {
 
 static void
 init_config( struct my_config *config) {
-  config->arm9_gdb_port = 0;
-  config->arm7_gdb_port = 0;
-
   config->disable_sound = 0;
 
   config->disable_limiter = 0;
@@ -212,30 +208,6 @@ fill_config( struct my_config *config,
         good_args = 0;
       }
     }
-    else if ( strncmp( argv[i], "--arm9gdb=", 10) == 0) {
-      char *end_char;
-      unsigned long port_num = strtoul( &argv[i][10], &end_char, 10);
-
-      if ( port_num > 0 && port_num < 65536) {
-        config->arm9_gdb_port = port_num;
-      }
-      else {
-        fprintf( stderr, "ARM9 GDB stub port must be in the range 1 to 65535\n");
-        good_args = 0;
-      }
-    }
-    else if ( strncmp( argv[i], "--arm7gdb=", 10) == 0) {
-      char *end_char;
-      unsigned long port_num = strtoul( &argv[i][10], &end_char, 10);
-
-      if ( port_num > 0 && port_num < 65536) {
-        config->arm7_gdb_port = port_num;
-      }
-      else {
-        fprintf( stderr, "ARM7 GDB stub port must be in the range 1 to 65535\n");
-        good_args = 0;
-      }
-    }
     else if ( strncmp( argv[i], "--cflash=", 9) == 0) {
       if ( config->cflash_disk_image_file == NULL) {
         config->cflash_disk_image_file = &argv[i][9];
@@ -270,26 +242,6 @@ fill_config( struct my_config *config,
 
   return good_args;
 }
-
-
-/*
- * The thread handling functions needed by the GDB stub code.
- */
-void *
-createThread_gdb( void (*thread_function)( void *data),
-                  void *thread_data) {
-  SDL_Thread *new_thread = SDL_CreateThread( (int (*)(void *data))thread_function,
-                                             thread_data);
-
-  return new_thread;
-}
-
-void
-joinThread_gdb( void *thread_handle) {
-  int ignore;
-  SDL_WaitThread( thread_handle, &ignore);
-}
-
 
 
 /** 
@@ -542,8 +494,6 @@ int main(int argc, char ** argv) {
   static unsigned short keypad = 0;
   struct my_config my_config;
   u32 last_cycle = 0;
-  gdbstub_handle_t arm9_gdb_stub;
-  gdbstub_handle_t arm7_gdb_stub;
   struct armcpu_memory_iface *arm9_memio = &arm9_base_memory_iface;
   struct armcpu_memory_iface *arm7_memio = &arm7_base_memory_iface;
   struct armcpu_ctrl_iface *arm9_ctrl_iface;
@@ -584,29 +534,6 @@ int main(int argc, char ** argv) {
     fw_config.language = my_config.firmware_language;
   }
 
-  if ( my_config.arm9_gdb_port != 0) {
-    arm9_gdb_stub = createStub_gdb( my_config.arm9_gdb_port,
-                                    &arm9_memio,
-                                    &arm9_direct_memory_iface);
-
-    if ( arm9_gdb_stub == NULL) {
-      fprintf( stderr, "Failed to create ARM9 gdbstub on port %d\n",
-               my_config.arm9_gdb_port);
-      exit( 1);
-    }
-  }
-  if ( my_config.arm7_gdb_port != 0) {
-    arm7_gdb_stub = createStub_gdb( my_config.arm7_gdb_port,
-                                    &arm7_memio,
-                                    &arm7_base_memory_iface);
-
-    if ( arm7_gdb_stub == NULL) {
-      fprintf( stderr, "Failed to create ARM7 gdbstub on port %d\n",
-               my_config.arm7_gdb_port);
-      exit( 1);
-    }
-  }
-
 #ifdef DEBUG
   LogStart();
 #endif
@@ -627,17 +554,6 @@ int main(int argc, char ** argv) {
   if (NDS_LoadROM( my_config.nds_file, MC_TYPE_AUTODETECT, 1, my_config.cflash_disk_image_file) < 0) {
     fprintf(stderr, "error while loading %s\n", my_config.nds_file);
     exit(-1);
-  }
-
-  /*
-   * Activate the GDB stubs
-   * This has to come after the NDS_Init where the cpus are set up.
-   */
-  if ( my_config.arm9_gdb_port != 0) {
-    activateStub_gdb( arm9_gdb_stub, arm9_ctrl_iface);
-  }
-  if ( my_config.arm7_gdb_port != 0) {
-    activateStub_gdb( arm7_gdb_stub, arm7_ctrl_iface);
   }
 
   /*      // This has to get fixed yet
@@ -707,8 +623,8 @@ int main(int argc, char ** argv) {
   if ( !my_config.opengl_2d) {
 #endif
     sdl_videoFlags |= SDL_SWSURFACE;
-    surface = SDL_SetVideoMode(256, 384, 32, sdl_videoFlags);
-
+    surface = SDL_SetVideoMode(256, 384, 32, SDL_HWSURFACE | SDL_OPENGL);
+  
     if ( !surface ) {
       fprintf( stderr, "Video mode set failed: %s\n", SDL_GetError( ) );
       exit( -1);
@@ -817,12 +733,6 @@ int main(int argc, char ** argv) {
   SDL_Quit();
   NDS_DeInit();
 
-  if ( my_config.arm9_gdb_port != 0) {
-    destroyStub_gdb( arm9_gdb_stub);
-  }
-  if ( my_config.arm7_gdb_port != 0) {
-    destroyStub_gdb( arm7_gdb_stub);
-  }
 
 #ifdef DEBUG
   LogStop();

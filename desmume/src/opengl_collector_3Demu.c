@@ -45,8 +45,6 @@
  * - More of the 3D needs to be emulated (correctly or at all) :).
  */
 
-#ifdef HAVE_GL_GL_H
-#ifdef HAVE_GL_GLU_H
 #ifndef __MINGW32__
 
 #include <stdio.h>
@@ -2105,10 +2103,10 @@ static char
 init_3Dgl_collect( void) {
   int i;
 
-  LOG("Initialising 3D renderer for OpenGL Collector\n");
+  printf("Initialising 3D renderer for OpenGL Collector\n");
 
   if ( !initialise_ogl_collector_platform()) {
-    LOG_ERROR( "Platform initialisation failed\n");
+    printf( "Platform initialisation failed\n");
     return 0;
   }
 
@@ -3145,5 +3143,3 @@ GPU3DInterface gpu3D_opengl_collector = {
 
 
 #endif /* End of __MINGW32__ */
-#endif /* End of HAVE_GL_GLU_H */
-#endif /* End of HAVE_GL_GL_H */
