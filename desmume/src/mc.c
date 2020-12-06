@@ -20,7 +20,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "debug.h"
 #include "types.h"
 #include "mc.h"
 
@@ -342,7 +341,7 @@ u8 fw_transfer(memory_chip_t *mc, u8 data)
 				break;
 				
 			default:
-                                LOG("Unhandled FW command: %02X\n", data);
+                                //LOG("Unhandled FW command: %02X\n", data);
 				break;
 		}
 	}
@@ -466,7 +465,7 @@ u8 bm_transfer(memory_chip_t *mc, u8 data)
 				break;
 
 			default:
-                                LOG("Unhandled Backup Memory command: %02X\n", data);
+                               // LOG("Unhandled Backup Memory command: %02X\n", data);
 				break;
 		}
 	}

@@ -22,7 +22,5 @@
 
 #include <stdio.h>
 
-#include "debug.h"
-
 #endif /*__CONFIG_H__*/
 

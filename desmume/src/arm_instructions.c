@@ -23,7 +23,6 @@
 */
 
 #include "cp15.h"
-#include "debug.h"
 #include "MMU.h"
 
 
@@ -240,9 +239,9 @@ extern BOOL execute;
 static u32 FASTCALL  OP_UND(armcpu_t *cpu)
 {
 	u32 i = cpu->instruction;
-	LOG("Undefined instruction: %08X\n", i);
+	//LOG("Undefined instruction: %08X\n", i);
 	execute = FALSE;
-	LOG("Stopped (OP_UND)\n");
+	//LOG("Stopped (OP_UND)\n");
 	return 1;
 }
  
@@ -3511,7 +3510,7 @@ static u32 FASTCALL  OP_QADD(armcpu_t *cpu)
      u32 i = cpu->instruction;
         u32 res = cpu->R[REG_POS(i,16)]+cpu->R[REG_POS(i,0)];
 
-    LOG("spe add\r\n");
+    //LOG("spe add\r\n");
 	if(SIGNED_OVERFLOW(cpu->R[REG_POS(i,16)],cpu->R[REG_POS(i,0)], res))
 	{
 		cpu->CPSR.bits.Q=1;
@@ -3533,7 +3532,7 @@ static u32 FASTCALL  OP_QSUB(armcpu_t *cpu)
      u32 i = cpu->instruction;
         u32 res = cpu->R[REG_POS(i,0)]-cpu->R[REG_POS(i,16)];
 
-    LOG("spe add\r\n");
+	//LOG("spe add\r\n");
 	if(SIGNED_UNDERFLOW(cpu->R[REG_POS(i,0)], cpu->R[REG_POS(i,16)], res))
 	{
 		cpu->CPSR.bits.Q=1;
@@ -3557,7 +3556,7 @@ static u32 FASTCALL  OP_QDADD(armcpu_t *cpu)
         u32 res;
 
 
-    LOG("spe add\r\n");
+    //LOG("spe add\r\n");
 	if(BIT31(cpu->R[REG_POS(i,16)])!=BIT31(mul))
 	{
 		cpu->CPSR.bits.Q=1;
@@ -3588,7 +3587,7 @@ static u32 FASTCALL  OP_QDSUB(armcpu_t *cpu)
         u32 res;
 
 
-    LOG("spe add\r\n");
+    //LOG("spe add\r\n");
 	if(BIT31(cpu->R[REG_POS(i,16)])!=BIT31(mul))
 	{
 		cpu->CPSR.bits.Q=1;
@@ -3723,7 +3722,7 @@ static u32 FASTCALL  OP_SMLAL_B_B(armcpu_t *cpu)
      s64 tmp = (s64)(LWORD(cpu->R[REG_POS(i,0)])* LWORD(cpu->R[REG_POS(i,8)]));
      u64 res = (u64)tmp + cpu->R[REG_POS(i,12)];
 
-     LOG("SMLALBB %08X * %08X + %08X%08X = %08X%08X\r\n", (int)cpu->R[REG_POS(i,0)], (int)cpu->R[REG_POS(i,8)], (int)cpu->R[REG_POS(i,16)], (int)cpu->R[REG_POS(i,12)], (int)(cpu->R[REG_POS(i,16)] + (res + ((tmp<0)*0xFFFFFFFF))), (int)(u32) res);
+     //LOG("SMLALBB %08X * %08X + %08X%08X = %08X%08X\r\n", (int)cpu->R[REG_POS(i,0)], (int)cpu->R[REG_POS(i,8)], (int)cpu->R[REG_POS(i,16)], (int)cpu->R[REG_POS(i,12)], (int)(cpu->R[REG_POS(i,16)] + (res + ((tmp<0)*0xFFFFFFFF))), (int)(u32) res);
 
      cpu->R[REG_POS(i,12)] = (u32) res;
      cpu->R[REG_POS(i,16)] += (res + ((tmp<0)*0xFFFFFFFF));
@@ -3737,7 +3736,7 @@ static u32 FASTCALL  OP_SMLAL_B_T(armcpu_t *cpu)
      s64 tmp = (s64)(LWORD(cpu->R[REG_POS(i,0)])* HWORD(cpu->R[REG_POS(i,8)]));
      u64 res = (u64)tmp + cpu->R[REG_POS(i,12)];
      
-     LOG("SMLALBT %08X * %08X + %08X%08X = %08X%08X\r\n", (int)cpu->R[REG_POS(i,0)], (int)cpu->R[REG_POS(i,8)], (int)cpu->R[REG_POS(i,16)], (int)cpu->R[REG_POS(i,12)], (int)(cpu->R[REG_POS(i,16)] + res + ((tmp<0)*0xFFFFFFFF)), (int)(u32) res);
+     //LOG("SMLALBT %08X * %08X + %08X%08X = %08X%08X\r\n", (int)cpu->R[REG_POS(i,0)], (int)cpu->R[REG_POS(i,8)], (int)cpu->R[REG_POS(i,16)], (int)cpu->R[REG_POS(i,12)], (int)(cpu->R[REG_POS(i,16)] + res + ((tmp<0)*0xFFFFFFFF)), (int)(u32) res);
 
      cpu->R[REG_POS(i,12)] = (u32) res;
      cpu->R[REG_POS(i,16)] += res + ((tmp<0)*0xFFFFFFFF);
@@ -3751,7 +3750,7 @@ static u32 FASTCALL  OP_SMLAL_T_B(armcpu_t *cpu)
      s64 tmp = (s64)(HWORD(cpu->R[REG_POS(i,0)])* (s64)LWORD(cpu->R[REG_POS(i,8)]));
      u64 res = (u64)tmp + cpu->R[REG_POS(i,12)];
      
-     LOG("SMLALTB %08X * %08X + %08X%08X = %08X%08X\r\n", (int)cpu->R[REG_POS(i,0)], (int)cpu->R[REG_POS(i,8)], (int)cpu->R[REG_POS(i,16)], (int)cpu->R[REG_POS(i,12)], (int)(cpu->R[REG_POS(i,16)] + res + ((tmp<0)*0xFFFFFFFF)), (int)(u32) res);
+     //LOG("SMLALTB %08X * %08X + %08X%08X = %08X%08X\r\n", (int)cpu->R[REG_POS(i,0)], (int)cpu->R[REG_POS(i,8)], (int)cpu->R[REG_POS(i,16)], (int)cpu->R[REG_POS(i,12)], (int)(cpu->R[REG_POS(i,16)] + res + ((tmp<0)*0xFFFFFFFF)), (int)(u32) res);
 
      cpu->R[REG_POS(i,12)] = (u32) res;
      cpu->R[REG_POS(i,16)] += res + ((tmp<0)*0xFFFFFFFF);
@@ -3765,7 +3764,7 @@ static u32 FASTCALL  OP_SMLAL_T_T(armcpu_t *cpu)
      s64 tmp = (s64)(HWORD(cpu->R[REG_POS(i,0)])* HWORD(cpu->R[REG_POS(i,8)]));
      u64 res = (u64)tmp + cpu->R[REG_POS(i,12)];
      
-     LOG("SMLALTT %08X * %08X + %08X%08X = %08X%08X\r\n", (int)cpu->R[REG_POS(i,0)], (int)cpu->R[REG_POS(i,8)], (int)cpu->R[REG_POS(i,16)], (int)cpu->R[REG_POS(i,12)], (int)(cpu->R[REG_POS(i,16)] + res + ((tmp<0)*0xFFFFFFFF)), (int)(u32) res);
+     //LOG("SMLALTT %08X * %08X + %08X%08X = %08X%08X\r\n", (int)cpu->R[REG_POS(i,0)], (int)cpu->R[REG_POS(i,8)], (int)cpu->R[REG_POS(i,16)], (int)cpu->R[REG_POS(i,12)], (int)(cpu->R[REG_POS(i,16)] + res + ((tmp<0)*0xFFFFFFFF)), (int)(u32) res);
      
      cpu->R[REG_POS(i,12)] = (u32) res;
      cpu->R[REG_POS(i,16)] += res + ((tmp<0)*0xFFFFFFFF);
@@ -5864,7 +5863,7 @@ static u32 FASTCALL  OP_LDRBT_M_IMM_OFF_POSTIND(armcpu_t *cpu)
      oldmode = armcpu_switchMode(cpu, SYS);
 
      //execute = FALSE;
-	 LOG("Untested opcode: OP_LDRBT_M_IMM_OFF_POSTIND\n");
+	 //LOG("Untested opcode: OP_LDRBT_M_IMM_OFF_POSTIND\n");
      
      
      i = cpu->instruction;
@@ -5890,7 +5889,7 @@ static u32 FASTCALL  OP_LDRBT_P_REG_OFF_POSTIND(armcpu_t *cpu)
           
      oldmode = armcpu_switchMode(cpu, SYS);
      //execute = FALSE;
-	 LOG("Untested opcode: OP_LDRBT_P_REG_OFF_POSTIND\n");
+	 //LOG("Untested opcode: OP_LDRBT_P_REG_OFF_POSTIND\n");
           
 
      i = cpu->instruction;
@@ -5916,7 +5915,7 @@ static u32 FASTCALL  OP_LDRBT_P_LSL_IMM_OFF_POSTIND(armcpu_t *cpu)
           return 2;
      oldmode = armcpu_switchMode(cpu, SYS);
      //execute = FALSE;
-	 LOG("Untested opcode: OP_LDRBT_P_LSL_IMM_OFF_POSTIND\n");  
+	 //LOG("Untested opcode: OP_LDRBT_P_LSL_IMM_OFF_POSTIND\n");  
           
 
      i = cpu->instruction;
@@ -5944,7 +5943,7 @@ static u32 FASTCALL  OP_LDRBT_M_LSL_IMM_OFF_POSTIND(armcpu_t *cpu)
           
      oldmode = armcpu_switchMode(cpu, SYS);
      //execute = FALSE;
-	 LOG("Untested opcode: OP_LDRBT_M_LSL_IMM_OFF_POSTIND\n");  
+	 //OG("Untested opcode: OP_LDRBT_M_LSL_IMM_OFF_POSTIND\n");  
           
 
      i = cpu->instruction;
@@ -5972,7 +5971,7 @@ static u32 FASTCALL  OP_LDRBT_P_LSR_IMM_OFF_POSTIND(armcpu_t *cpu)
      
      oldmode = armcpu_switchMode(cpu, SYS);
      //execute = FALSE;
-	 LOG("Untested opcode: OP_LDRBT_P_LSR_IMM_OFF_POSTIND\n");  
+	 //LOG("Untested opcode: OP_LDRBT_P_LSR_IMM_OFF_POSTIND\n");  
           
 
      i = cpu->instruction;
@@ -6000,7 +5999,7 @@ static u32 FASTCALL  OP_LDRBT_M_LSR_IMM_OFF_POSTIND(armcpu_t *cpu)
      
      oldmode = armcpu_switchMode(cpu, SYS);
      //execute = FALSE;
-	 LOG("Untested opcode: OP_LDRBT_M_LSR_IMM_OFF_POSTIND\n");
+	 //LOG("Untested opcode: OP_LDRBT_M_LSR_IMM_OFF_POSTIND\n");
           
 
      i = cpu->instruction;
@@ -6028,7 +6027,7 @@ static u32 FASTCALL  OP_LDRBT_P_ASR_IMM_OFF_POSTIND(armcpu_t *cpu)
      
      oldmode = armcpu_switchMode(cpu, SYS);
      //execute = FALSE;
-	 LOG("Untested opcode: OP_LDRBT_P_ASR_IMM_OFF_POSTIND\n");
+	 //LOG("Untested opcode: OP_LDRBT_P_ASR_IMM_OFF_POSTIND\n");
           
 
      i = cpu->instruction;
@@ -6056,7 +6055,7 @@ static u32 FASTCALL  OP_LDRBT_M_ASR_IMM_OFF_POSTIND(armcpu_t *cpu)
           
      oldmode = armcpu_switchMode(cpu, SYS);
      //execute = FALSE;
-	 LOG("Untested opcode: OP_LDRBT_M_ASR_IMM_OFF_POSTIND\n");
+	 //LOG("Untested opcode: OP_LDRBT_M_ASR_IMM_OFF_POSTIND\n");
           
 
      i = cpu->instruction;
@@ -6084,7 +6083,7 @@ static u32 FASTCALL  OP_LDRBT_P_ROR_IMM_OFF_POSTIND(armcpu_t *cpu)
           
      oldmode = armcpu_switchMode(cpu, SYS);
      //execute = FALSE;
-	 LOG("Untested opcode: OP_LDRBT_P_ROR_IMM_OFF_POSTIND\n");
+	 //LOG("Untested opcode: OP_LDRBT_P_ROR_IMM_OFF_POSTIND\n");
           
 
      i = cpu->instruction;
@@ -6112,7 +6111,7 @@ static u32 FASTCALL  OP_LDRBT_M_ROR_IMM_OFF_POSTIND(armcpu_t *cpu)
           
      oldmode = armcpu_switchMode(cpu, SYS);
      //execute = FALSE;
-	 LOG("Untested opcode: OP_LDRBT_M_ROR_IMM_OFF_POSTIND\n");
+	 //LOG("Untested opcode: OP_LDRBT_M_ROR_IMM_OFF_POSTIND\n");
           
 
      i = cpu->instruction;
@@ -6842,7 +6841,7 @@ static u32 FASTCALL  OP_LDMIB2(armcpu_t *cpu)
      u32 * registres;
      u32 * waitState;
      //execute = FALSE;
-	 LOG("Untested opcode: OP_LDMIB2\n");
+	 //LOG("Untested opcode: OP_LDMIB2\n");
 
      if(BIT15(i)==0)
      {  
@@ -6901,7 +6900,7 @@ static u32 FASTCALL  OP_LDMDA2(armcpu_t *cpu)
      
      u32 start = cpu->R[REG_POS(i,16)];
      //execute = FALSE;
-	 LOG("Untested opcode: OP_LDMDA2\n");
+	 //LOG("Untested opcode: OP_LDMDA2\n");
 
      if(BIT15(i)==0)
      {  
@@ -7412,7 +7411,7 @@ static u32 FASTCALL  OP_STMIA2(armcpu_t *cpu)
      oldmode = armcpu_switchMode(cpu, SYS);
 
      //execute = FALSE;
-	 LOG("Untested opcode: OP_STMIA2\n");
+	// LOG("Untested opcode: OP_STMIA2\n");
 
      for(b=0; b<16; ++b)
      {
@@ -7443,7 +7442,7 @@ static u32 FASTCALL  OP_STMIB2(armcpu_t *cpu)
      oldmode = armcpu_switchMode(cpu, SYS);
      
      //execute = FALSE;
-	 LOG("Untested opcode: OP_STMIB2\n");
+	 //LOG("Untested opcode: OP_STMIB2\n");
      
      for(b=0; b<16; ++b)
      {
@@ -7474,7 +7473,7 @@ static u32 FASTCALL  OP_STMDA2(armcpu_t *cpu)
      oldmode = armcpu_switchMode(cpu, SYS);     
      
      //execute = FALSE;
-	 LOG("Untested opcode: OP_STMDA2\n");  
+	 //LOG("Untested opcode: OP_STMDA2\n");  
      
      for(b=0; b<16; ++b)
      {
@@ -7532,7 +7531,7 @@ static u32 FASTCALL  OP_STMIA2_W(armcpu_t *cpu)
      oldmode = armcpu_switchMode(cpu, SYS);
      
      //execute = FALSE;
-	 LOG("Untested opcode: OP_STMIA2_W\n");
+	 //LOG("Untested opcode: OP_STMIA2_W\n");
      
      for(b=0; b<16; ++b)
      {
@@ -7592,7 +7591,7 @@ static u32 FASTCALL  OP_STMDA2_W(armcpu_t *cpu)
      start = cpu->R[REG_POS(i,16)];
      oldmode = armcpu_switchMode(cpu, SYS);
      //execute = FALSE;
-	 LOG("Untested opcode: OP_STMDA2_W\n");
+	 //LOG("Untested opcode: OP_STMDA2_W\n");
      
      for(b=0; b<16; ++b)
      {
@@ -7626,7 +7625,7 @@ static u32 FASTCALL  OP_STMDB2_W(armcpu_t *cpu)
      oldmode = armcpu_switchMode(cpu, SYS);
 
      //execute = FALSE;
-	 LOG("Untested opcode: OP_STMDB2_W\n");   
+	 //LOG("Untested opcode: OP_STMDB2_W\n");   
 
      for(b=0; b<16; ++b)
      {
@@ -7855,7 +7854,7 @@ static u32 FASTCALL  OP_MCR(armcpu_t *cpu)
      if(!cpu->coproc[cpnum])
      {
           execute = FALSE;
-		  LOG("Stopped (OP_MCR)\n");
+		  //LOG("Stopped (OP_MCR)\n");
           return 2;
      }
      
@@ -7874,7 +7873,7 @@ static u32 FASTCALL  OP_MRC(armcpu_t *cpu)
      if(!cpu->coproc[cpnum])
      {
           execute = FALSE;
-		  LOG("Stopped (OP_MRC)\n");
+		  //LOG("Stopped (OP_MRC)\n");
           return 2;
      }
      
@@ -7911,18 +7910,18 @@ static u32 FASTCALL  OP_SWI(armcpu_t *cpu)
 //----------------BKPT-------------------------
 static u32 FASTCALL OP_BKPT(armcpu_t *cpu)
 {
-     execute = FALSE;
-	 LOG("Stopped (OP_BKPT)\n");
-     return 4;
+	execute = FALSE;
+	//LOG("Stopped (OP_BKPT)\n");
+	return 4;
 }
 
 //----------------CDP-----------------------
 
 static u32 FASTCALL  OP_CDP(armcpu_t *cpu)
 {
-     execute = FALSE;
-	 LOG("Stopped (OP_CDP)\n");
-     return 4;
+	execute = FALSE;
+	//LOG("Stopped (OP_CDP)\n");
+	return 4;
 }
 
 #define TYPE_RETOUR u32

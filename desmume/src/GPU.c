@@ -45,7 +45,6 @@
 #include <assert.h>
 #include "MMU.h"
 #include "GPU.h"
-#include "debug.h"
 #include "render3D.h"
 
 ARM9_struct ARM9Mem;
@@ -2174,7 +2173,8 @@ void GPU_ligne(NDS_Screen * screen, u16 l)
 					case 3:
 					
 						/* TODO... (the above code will need modifications in order to avoid redudance) */
-						GPULOG("Unhandled capture source: %d\n", capcnt->Capture_Source);	/* TODO */
+						//GPULOG("Unhandled capture source: %d\n", capcnt->Capture_Source);	/* TODO */
+					break;
 				}
 				
 				if(l + 1 == capy)		/* if it was the last line, we're done !*/

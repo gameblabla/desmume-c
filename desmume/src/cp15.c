@@ -22,7 +22,6 @@
 #include <stdlib.h>
 
 #include "cp15.h"
-#include "debug.h"
 #include "MMU.h"
 
 armcp15_t *armcp15_new(armcpu_t * c)
@@ -248,19 +247,19 @@ INLINE BOOL armcp15_isAccessAllowed(armcp15_t *armcp15,u32 address,u32 access)
 
 BOOL armcp15_dataProcess(armcp15_t *armcp15, u8 CRd, u8 CRn, u8 CRm, u8 opcode1, u8 opcode2)
 {
-		LOG("Unsupported CP15 operation : DataProcess\n");
+	//LOG("Unsupported CP15 operation : DataProcess\n");
    return FALSE;
 }
 
 BOOL armcp15_load(armcp15_t *armcp15, u8 CRd, u8 adr)
 {
-	LOG("Unsupported CP15 operation : Load\n");
+//LOG("Unsupported CP15 operation : Load\n");
    return FALSE;
 }
 
 BOOL armcp15_store(armcp15_t *armcp15, u8 CRd, u8 adr)
 {
-	LOG("Unsupported CP15 operation : Store\n");
+//LOG("Unsupported CP15 operation : Store\n");
    return FALSE;
 }
 
@@ -401,7 +400,7 @@ BOOL armcp15_moveCP2ARM(armcp15_t *armcp15, u32 * R, u8 CRn, u8 CRm, u8 opcode1,
 			}
 		return FALSE;
 		default :
-			LOG("Unsupported CP15 operation : MRC\n");
+//LOG("Unsupported CP15 operation : MRC\n");
 			return FALSE;
 	}
 }

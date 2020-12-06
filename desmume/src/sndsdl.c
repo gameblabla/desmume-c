@@ -24,7 +24,6 @@
 #include "types.h"
 #include "SPU.h"
 #include "sndsdl.h"
-#include "debug.h"
 
 int SNDSDLInit(int buffersize);
 void SNDSDLDeInit();

@@ -23,7 +23,6 @@
 #include <math.h>
 #include "MMU.h"
 #include "SPU.h"
-#include "debug.h"
 
 extern BOOL execute;
 
@@ -188,14 +187,14 @@ static u8 getvoltbl[] = {
 
 u32 bios_nop(armcpu_t * cpu)
 {
-     if (cpu->proc_ID == ARMCPU_ARM9)
+     /*if (cpu->proc_ID == ARMCPU_ARM9)
      {
         LOG("Unimplemented bios function %02X(ARM9) was used. R0:%08X\n", (cpu->instruction)&0x1F, cpu->R[0]);
      }
      else
      {
         LOG("Unimplemented bios function %02X(ARM7) was used. R0:%08X\n", (cpu->instruction)&0x1F, cpu->R[0]);
-     }
+     }*/
      return 3;
 }
 

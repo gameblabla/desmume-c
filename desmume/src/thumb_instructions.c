@@ -25,7 +25,6 @@
 */
 
 #include "bios.h"
-#include "debug.h"
 #include "MMU.h"
 
 #define REG_NUM(i, n) (((i)>>n)&0x7)

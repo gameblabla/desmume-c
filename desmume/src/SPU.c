@@ -22,7 +22,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "debug.h"
 #include "ARM9.h"
 #include "MMU.h"
 #include "SPU.h"

@@ -29,7 +29,6 @@
 
 //#include "gl_vertex.h"
 
-#include "debug.h"
 #include "NDSSystem.h"
 #include "cflash.h"
 #include "cp15.h"
@@ -173,7 +172,7 @@ u32 MMU_ARM7_WAIT32[16]={
 void MMU_Init(void) {
 	int i;
 
-	LOG("MMU init\n");
+	//LOG("MMU init\n");
 	//printlog("MMU init\n");
 
 	memset(&MMU, 0, sizeof(MMU_struct));
@@ -216,7 +215,7 @@ void MMU_Init(void) {
 } 
 
 void MMU_DeInit(void) {
-	LOG("MMU deinit\n");
+	//LOG("MMU deinit\n");
     if (MMU.fw.fp)
        fclose(MMU.fw.fp);
     mc_free(&MMU.fw);      
@@ -681,7 +680,7 @@ u16 FASTCALL MMU_read16(u32 proc, u32 adr)
 				return MMU.timer[proc][(adr&0xF)>>2];
 			
 			case 0x04000630 :
-				//LOG("vect res\r\n");	/* TODO (clear): ??? */
+				////LOG("vect res\r\n");	/* TODO (clear): ??? */
 				//execute = FALSE;
 				return 0;
                         case REG_POSTFLG :
@@ -750,7 +749,7 @@ u32 FASTCALL MMU_read32(u32 proc, u32 adr)
 			case 0x04000678:
 			case 0x0400067C:
 			{
-				//LOG("4000640h..67Fh - CLIPMTX_RESULT - Read Current Clip Coordinates Matrix (R)");
+				////LOG("4000640h..67Fh - CLIPMTX_RESULT - Read Current Clip Coordinates Matrix (R)");
 				return gpu3D->NDS_3D_GetClipMatrix ((adr-0x04000640)/4);
 			}
 			case 0x04000680:
@@ -763,7 +762,7 @@ u32 FASTCALL MMU_read32(u32 proc, u32 adr)
 			case 0x0400069C:
 			case 0x040006A0:
 			{
-				//LOG("4000680h..6A3h - VECMTX_RESULT - Read Current Directional Vector Matrix (R)");
+				////LOG("4000680h..6A3h - VECMTX_RESULT - Read Current Directional Vector Matrix (R)");
 				return gpu3D->NDS_3D_GetDirectionalMatrix ((adr-0x04000680)/4);
 			}
 
@@ -809,13 +808,13 @@ u32 FASTCALL MMU_read32(u32 proc, u32 adr)
 			}	
 			/*
 			case 0x04000640 :	// TODO (clear): again, ??? 
-				LOG("read proj\r\n");
+				//LOG("read proj\r\n");
 			return 0;
 			case 0x04000680 :
-				LOG("read roat\r\n");
+				//LOG("read roat\r\n");
 			return 0;
 			case 0x04000620 :
-				LOG("point res\r\n");
+				//LOG("point res\r\n");
 			return 0;
 			*/
             case REG_GCDATAIN:
@@ -1227,7 +1226,7 @@ void FASTCALL MMU_write8(u32 proc, u32 adr, u8 val)
 		case 0x040001AD :
 		case 0x040001AE :
 		case 0x040001AF :
-                    LOG("%08X : %02X\r\n", adr, val);
+                    //LOG("%08X : %02X\r\n", adr, val);
 #endif
 		
 		default :
@@ -1413,14 +1412,14 @@ void FASTCALL MMU_write16(u32 proc, u32 adr, u16 val)
 				{
 					if(val & (1<<15))
 					{
-						LOG("Main core on top\n");
+						//LOG("Main core on top\n");
 						MainScreen.offset = 0;
 						SubScreen.offset = 192;
 						//nds.swapScreen();
 					}
 					else
 					{
-						LOG("Main core on bottom (%04X)\n", val);
+						//LOG("Main core on bottom (%04X)\n", val);
 						MainScreen.offset = 192;
 						SubScreen.offset = 0;
 					}
@@ -1568,42 +1567,42 @@ void FASTCALL MMU_write16(u32 proc, u32 adr, u16 val)
 				/* NOTICE: Perhaps we have to use gbatek-like reg names instead of libnds-like ones ...*/
 				
                         case REG_DISPA_BG0CNT :
-				//GPULOG("MAIN BG0 SETPROP 16B %08X\r\n", val);
+				//GPU//LOG("MAIN BG0 SETPROP 16B %08X\r\n", val);
 				if(proc == ARMCPU_ARM9) GPU_setBGProp(MainScreen.gpu, 0, val);
 				T1WriteWord(MMU.MMU_MEM[proc][0x40], 0x8, val);
 				return;
                         case REG_DISPA_BG1CNT :
-				//GPULOG("MAIN BG1 SETPROP 16B %08X\r\n", val);
+				//GPU//LOG("MAIN BG1 SETPROP 16B %08X\r\n", val);
 				if(proc == ARMCPU_ARM9) GPU_setBGProp(MainScreen.gpu, 1, val);
 				T1WriteWord(MMU.MMU_MEM[proc][0x40], 0xA, val);
 				return;
                         case REG_DISPA_BG2CNT :
-				//GPULOG("MAIN BG2 SETPROP 16B %08X\r\n", val);
+				//GPU//LOG("MAIN BG2 SETPROP 16B %08X\r\n", val);
 				if(proc == ARMCPU_ARM9) GPU_setBGProp(MainScreen.gpu, 2, val);
 				T1WriteWord(MMU.MMU_MEM[proc][0x40], 0xC, val);
 				return;
                         case REG_DISPA_BG3CNT :
-				//GPULOG("MAIN BG3 SETPROP 16B %08X\r\n", val);
+				//GPU//LOG("MAIN BG3 SETPROP 16B %08X\r\n", val);
 				if(proc == ARMCPU_ARM9) GPU_setBGProp(MainScreen.gpu, 3, val);
 				T1WriteWord(MMU.MMU_MEM[proc][0x40], 0xE, val);
 				return;
                         case REG_DISPB_BG0CNT :
-				//GPULOG("SUB BG0 SETPROP 16B %08X\r\n", val);
+				//GPU//LOG("SUB BG0 SETPROP 16B %08X\r\n", val);
 				if(proc == ARMCPU_ARM9) GPU_setBGProp(SubScreen.gpu, 0, val);
 				T1WriteWord(MMU.MMU_MEM[proc][0x40], 0x1008, val);
 				return;
                         case REG_DISPB_BG1CNT :
-				//GPULOG("SUB BG1 SETPROP 16B %08X\r\n", val);
+				//GPU//LOG("SUB BG1 SETPROP 16B %08X\r\n", val);
 				if(proc == ARMCPU_ARM9) GPU_setBGProp(SubScreen.gpu, 1, val);
 				T1WriteWord(MMU.MMU_MEM[proc][0x40], 0x100A, val);
 				return;
                         case REG_DISPB_BG2CNT :
-				//GPULOG("SUB BG2 SETPROP 16B %08X\r\n", val);
+				//GPU//LOG("SUB BG2 SETPROP 16B %08X\r\n", val);
 				if(proc == ARMCPU_ARM9) GPU_setBGProp(SubScreen.gpu, 2, val);
 				T1WriteWord(MMU.MMU_MEM[proc][0x40], 0x100C, val);
 				return;
                         case REG_DISPB_BG3CNT :
-				//GPULOG("SUB BG3 SETPROP 16B %08X\r\n", val);
+				//GPU//LOG("SUB BG3 SETPROP 16B %08X\r\n", val);
 				if(proc == ARMCPU_ARM9) GPU_setBGProp(SubScreen.gpu, 3, val);
 				T1WriteWord(MMU.MMU_MEM[proc][0x40], 0x100E, val);
 				return;
@@ -1803,14 +1802,14 @@ void FASTCALL MMU_write16(u32 proc, u32 adr, u16 val)
 				return;
 			//case 0x020D8460 :
 			/*case 0x0235A904 :
-				LOG("ECRIRE %d %04X\r\n", proc, val);
+				//LOG("ECRIRE %d %04X\r\n", proc, val);
 				execute = FALSE;*/
                                 case REG_DMA0CNTH :
 				{
                                 u32 v;
 
 				//if(val&0x8000) execute = FALSE;
-				//LOG("16 bit dma0 %04X\r\n", val);
+				////LOG("16 bit dma0 %04X\r\n", val);
 				T1WriteWord(MMU.MMU_MEM[proc][0x40], 0xBA, val);
 				DMASrc[proc][0] = T1ReadLong(MMU.MMU_MEM[proc][0x40], 0xB0);
 				DMADst[proc][0] = T1ReadLong(MMU.MMU_MEM[proc][0x40], 0xB4);
@@ -1822,7 +1821,7 @@ void FASTCALL MMU_write16(u32 proc, u32 adr, u16 val)
 				#ifdef LOG_DMA2
 				//else
 				{
-					LOG("proc %d, dma %d src %08X dst %08X %s\r\n", proc, 0, DMASrc[proc][0], DMADst[proc][0], (val&(1<<25))?"ON":"OFF");
+					//LOG("proc %d, dma %d src %08X dst %08X %s\r\n", proc, 0, DMASrc[proc][0], DMADst[proc][0], (val&(1<<25))?"ON":"OFF");
 				}
 				#endif
 				}
@@ -1831,7 +1830,7 @@ void FASTCALL MMU_write16(u32 proc, u32 adr, u16 val)
 				{
                                 u32 v;
 				//if(val&0x8000) execute = FALSE;
-				//LOG("16 bit dma1 %04X\r\n", val);
+				////LOG("16 bit dma1 %04X\r\n", val);
 				T1WriteWord(MMU.MMU_MEM[proc][0x40], 0xC6, val);
 				DMASrc[proc][1] = T1ReadLong(MMU.MMU_MEM[proc][0x40], 0xBC);
 				DMASrc[proc][1] = T1ReadLong(MMU.MMU_MEM[proc][0x40], 0xC0);
@@ -1843,7 +1842,7 @@ void FASTCALL MMU_write16(u32 proc, u32 adr, u16 val)
 				#ifdef LOG_DMA2
 				//else
 				{
-					LOG("proc %d, dma %d src %08X dst %08X %s\r\n", proc, 1, DMASrc[proc][1], DMADst[proc][1], (val&(1<<25))?"ON":"OFF");
+					//LOG("proc %d, dma %d src %08X dst %08X %s\r\n", proc, 1, DMASrc[proc][1], DMADst[proc][1], (val&(1<<25))?"ON":"OFF");
 				}
 				#endif
 				}
@@ -1852,7 +1851,7 @@ void FASTCALL MMU_write16(u32 proc, u32 adr, u16 val)
 				{
                                 u32 v;
 				//if(val&0x8000) execute = FALSE;
-				//LOG("16 bit dma2 %04X\r\n", val);
+				////LOG("16 bit dma2 %04X\r\n", val);
 				T1WriteWord(MMU.MMU_MEM[proc][0x40], 0xD2, val);
 				DMASrc[proc][2] = T1ReadLong(MMU.MMU_MEM[proc][0x40], 0xC8);
 				DMASrc[proc][2] = T1ReadLong(MMU.MMU_MEM[proc][0x40], 0xCC);
@@ -1864,7 +1863,7 @@ void FASTCALL MMU_write16(u32 proc, u32 adr, u16 val)
 				#ifdef LOG_DMA2
 				//else
 				{
-					LOG("proc %d, dma %d src %08X dst %08X %s\r\n", proc, 2, DMASrc[proc][2], DMADst[proc][2], (val&(1<<25))?"ON":"OFF");
+					//LOG("proc %d, dma %d src %08X dst %08X %s\r\n", proc, 2, DMASrc[proc][2], DMADst[proc][2], (val&(1<<25))?"ON":"OFF");
 				}
 				#endif
 				}
@@ -1873,7 +1872,7 @@ void FASTCALL MMU_write16(u32 proc, u32 adr, u16 val)
 				{
                                 u32 v;
 				//if(val&0x8000) execute = FALSE;
-				//LOG("16 bit dma3 %04X\r\n", val);
+				////LOG("16 bit dma3 %04X\r\n", val);
 				T1WriteWord(MMU.MMU_MEM[proc][0x40], 0xDE, val);
 				DMASrc[proc][3] = T1ReadLong(MMU.MMU_MEM[proc][0x40], 0xD4);
 				DMASrc[proc][3] = T1ReadLong(MMU.MMU_MEM[proc][0x40], 0xD8);
@@ -1886,7 +1885,7 @@ void FASTCALL MMU_write16(u32 proc, u32 adr, u16 val)
 				#ifdef LOG_DMA2
 				//else
 				{
-					LOG("proc %d, dma %d src %08X dst %08X %s\r\n", proc, 3, DMASrc[proc][3], DMADst[proc][3], (val&(1<<25))?"ON":"OFF");
+					//LOG("proc %d, dma %d src %08X dst %08X %s\r\n", proc, 3, DMASrc[proc][3], DMADst[proc][3], (val&(1<<25))?"ON":"OFF");
 				}
 				#endif
 				}
@@ -2435,13 +2434,13 @@ void FASTCALL MMU_write32(u32 proc, u32 adr, u32 val)
 			case REG_DISPA_DISPCNT :
 				if(proc == ARMCPU_ARM9) GPU_setVideoProp(MainScreen.gpu, val);
 				
-				//GPULOG("MAIN INIT 32B %08X\r\n", val);
+				//GPU//LOG("MAIN INIT 32B %08X\r\n", val);
 				T1WriteLong(MMU.MMU_MEM[proc][0x40], 0, val);
 				return;
 				
                         case REG_DISPB_DISPCNT : 
 				if (proc == ARMCPU_ARM9) GPU_setVideoProp(SubScreen.gpu, val);
-				//GPULOG("SUB INIT 32B %08X\r\n", val);
+				//GPU//LOG("SUB INIT 32B %08X\r\n", val);
 				T1WriteLong(MMU.MMU_MEM[proc][0x40], 0x1000, val);
 				return;
 			case REG_VRAMCNTA:
@@ -2585,9 +2584,9 @@ void FASTCALL MMU_write32(u32 proc, u32 adr, u32 val)
 						mod = num % den;
 						cnt &= 0x3FFF;
 					}
-					DIVLOG("BOUT1 %08X%08X / %08X%08X = %08X%08X\r\n", (u32)(num>>32), (u32)num, 
+					/*DIVLOG("BOUT1 %08X%08X / %08X%08X = %08X%08X\r\n", (u32)(num>>32), (u32)num, 
 											(u32)(den>>32), (u32)den, 
-											(u32)(res>>32), (u32)res);
+											(u32)(res>>32), (u32)res);*/
 					T1WriteLong(MMU.MMU_MEM[proc][0x40], 0x2A0, (u32) res);
 					T1WriteLong(MMU.MMU_MEM[proc][0x40], 0x2A4, (u32) (res >> 32));
 					T1WriteLong(MMU.MMU_MEM[proc][0x40], 0x2A8, (u32) mod);
@@ -2638,9 +2637,9 @@ void FASTCALL MMU_write32(u32 proc, u32 adr, u32 val)
 					mod = num % den;
 					cnt &= 0x3FFF;
 				}
-				DIVLOG("BOUT2 %08X%08X / %08X%08X = %08X%08X\r\n", (u32)(num>>32), (u32)num, 
+				/*DIVLOG("BOUT2 %08X%08X / %08X%08X = %08X%08X\r\n", (u32)(num>>32), (u32)num, 
 										(u32)(den>>32), (u32)den, 
-										(u32)(res>>32), (u32)res);
+										(u32)(res>>32), (u32)res);*/
 				T1WriteLong(MMU.MMU_MEM[proc][0x40], 0x2A0, (u32) res);
 				T1WriteLong(MMU.MMU_MEM[proc][0x40], 0x2A4, (u32) (res >> 32));
 				T1WriteLong(MMU.MMU_MEM[proc][0x40], 0x2A8, (u32) mod);
@@ -2665,8 +2664,8 @@ void FASTCALL MMU_write32(u32 proc, u32 adr, u32 val)
 					}
 					T1WriteLong(MMU.MMU_MEM[proc][0x40], 0x2B4, (u32) sqrt(v));
 					T1WriteLong(MMU.MMU_MEM[proc][0x40], 0x2B0, cnt & 0x7FFF);
-					SQRTLOG("BOUT1 sqrt(%08X%08X) = %08X\r\n", (u32)(v>>32), (u32)v, 
-										T1ReadLong(MMU.MMU_MEM[proc][0x40], 0x2B4));
+					/*SQRTLOG("BOUT1 sqrt(%08X%08X) = %08X\r\n", (u32)(v>>32), (u32)v, 
+										T1ReadLong(MMU.MMU_MEM[proc][0x40], 0x2B4));*/
 				}
 				return;
                         case REG_SQRTPARAM+4 :
@@ -2686,8 +2685,8 @@ void FASTCALL MMU_write32(u32 proc, u32 adr, u32 val)
 					}
 					T1WriteLong(MMU.MMU_MEM[proc][0x40], 0x2B4, (u32) sqrt(v));
 					T1WriteLong(MMU.MMU_MEM[proc][0x40], 0x2B0, cnt & 0x7FFF);
-					SQRTLOG("BOUT2 sqrt(%08X%08X) = %08X\r\n", (u32)(v>>32), (u32)v, 
-										T1ReadLong(MMU.MMU_MEM[proc][0x40], 0x2B4));
+					/*SQRTLOG("BOUT2 sqrt(%08X%08X) = %08X\r\n", (u32)(v>>32), (u32)v, 
+										T1ReadLong(MMU.MMU_MEM[proc][0x40], 0x2B4));*/
 				}
 				return;
                         case REG_IPCSYNC :
@@ -2745,7 +2744,7 @@ void FASTCALL MMU_write32(u32 proc, u32 adr, u32 val)
 				}
 				return;
 			case REG_DMA0CNTL :
-				//LOG("32 bit dma0 %04X\r\n", val);
+				////LOG("32 bit dma0 %04X\r\n", val);
 				DMASrc[proc][0] = T1ReadLong(MMU.MMU_MEM[proc][0x40], 0xB0);
 				DMADst[proc][0] = T1ReadLong(MMU.MMU_MEM[proc][0x40], 0xB4);
 				MMU.DMAStartTime[proc][0] = (proc ? (val>>28) & 0x3 : (val>>27) & 0x7);
@@ -2757,13 +2756,13 @@ void FASTCALL MMU_write32(u32 proc, u32 adr, u32 val)
 				#ifdef LOG_DMA2
 				else
 				{
-					LOG("proc %d, dma %d src %08X dst %08X start taille %d %d\r\n", proc, 0, DMASrc[proc][0], DMADst[proc][0], 0, ((MMU.DMACrt[proc][0]>>27)&7));
+					//LOG("proc %d, dma %d src %08X dst %08X start taille %d %d\r\n", proc, 0, DMASrc[proc][0], DMADst[proc][0], 0, ((MMU.DMACrt[proc][0]>>27)&7));
 				}
 				#endif
 				//execute = FALSE;
 				return;
 			case REG_DMA1CNTL:
-				//LOG("32 bit dma1 %04X\r\n", val);
+				////LOG("32 bit dma1 %04X\r\n", val);
 				DMASrc[proc][1] = T1ReadLong(MMU.MMU_MEM[proc][0x40], 0xBC);
 				DMADst[proc][1] = T1ReadLong(MMU.MMU_MEM[proc][0x40], 0xC0);
 				MMU.DMAStartTime[proc][1] = (proc ? (val>>28) & 0x3 : (val>>27) & 0x7);
@@ -2775,12 +2774,12 @@ void FASTCALL MMU_write32(u32 proc, u32 adr, u32 val)
 				#ifdef LOG_DMA2
 				else
 				{
-					LOG("proc %d, dma %d src %08X dst %08X start taille %d %d\r\n", proc, 1, DMASrc[proc][1], DMADst[proc][1], 0, ((MMU.DMACrt[proc][1]>>27)&7));
+					//LOG("proc %d, dma %d src %08X dst %08X start taille %d %d\r\n", proc, 1, DMASrc[proc][1], DMADst[proc][1], 0, ((MMU.DMACrt[proc][1]>>27)&7));
 				}
 				#endif
 				return;
 			case REG_DMA2CNTL :
-				//LOG("32 bit dma2 %04X\r\n", val);
+				////LOG("32 bit dma2 %04X\r\n", val);
 				DMASrc[proc][2] = T1ReadLong(MMU.MMU_MEM[proc][0x40], 0xC8);
 				DMADst[proc][2] = T1ReadLong(MMU.MMU_MEM[proc][0x40], 0xCC);
 				MMU.DMAStartTime[proc][2] = (proc ? (val>>28) & 0x3 : (val>>27) & 0x7);
@@ -2792,12 +2791,12 @@ void FASTCALL MMU_write32(u32 proc, u32 adr, u32 val)
 				#ifdef LOG_DMA2
 				else
 				{
-					LOG("proc %d, dma %d src %08X dst %08X start taille %d %d\r\n", proc, 2, DMASrc[proc][2], DMADst[proc][2], 0, ((MMU.DMACrt[proc][2]>>27)&7));
+					//LOG("proc %d, dma %d src %08X dst %08X start taille %d %d\r\n", proc, 2, DMASrc[proc][2], DMADst[proc][2], 0, ((MMU.DMACrt[proc][2]>>27)&7));
 				}
 				#endif
 				return;
 			case 0x040000DC :
-				//LOG("32 bit dma3 %04X\r\n", val);
+				////LOG("32 bit dma3 %04X\r\n", val);
 				DMASrc[proc][3] = T1ReadLong(MMU.MMU_MEM[proc][0x40], 0xD4);
 				DMADst[proc][3] = T1ReadLong(MMU.MMU_MEM[proc][0x40], 0xD8);
 				MMU.DMAStartTime[proc][3] = (proc ? (val>>28) & 0x3 : (val>>27) & 0x7);
@@ -2809,7 +2808,7 @@ void FASTCALL MMU_write32(u32 proc, u32 adr, u32 val)
 				#ifdef LOG_DMA2
 				else
 				{
-					LOG("proc %d, dma %d src %08X dst %08X start taille %d %d\r\n", proc, 3, DMASrc[proc][3], DMADst[proc][3], 0, ((MMU.DMACrt[proc][3]>>27)&7));
+					//LOG("proc %d, dma %d src %08X dst %08X start taille %d %d\r\n", proc, 3, DMASrc[proc][3], DMADst[proc][3], 0, ((MMU.DMACrt[proc][3]>>27)&7));
 				}
 				#endif
 				return;
@@ -2831,10 +2830,10 @@ void FASTCALL MMU_write32(u32 proc, u32 adr, u32 val)
                                         }
 					else
 					{
-                                                LOG("CARD command: %02X\n", MEM_8(MMU.MMU_MEM[proc], REG_GCCMDOUT));
+                                                //LOG("CARD command: %02X\n", MEM_8(MMU.MMU_MEM[proc], REG_GCCMDOUT));
 					}
 					
-					//CARDLOG("%08X : %08X %08X\r\n", adr, val, adresse[proc]);
+					//CARD//LOG("%08X : %08X %08X\r\n", adr, val, adresse[proc]);
                     val |= 0x00800000;
 					
 					if(MMU.dscard[proc].adress == 0)
@@ -2975,9 +2974,9 @@ void FASTCALL MMU_doDMA(u32 proc, u32 num)
 	MMU.DMAing[proc][num] = TRUE;
 	MMU.CheckDMAs |= (1<<(num+(proc<<2)));
 	
-	DMALOG("proc %d, dma %d src %08X dst %08X start %d taille %d repeat %s %08X\r\n",
+	/*DMA_LOG("proc %d, dma %d src %08X dst %08X start %d taille %d repeat %s %08X\r\n",
 		proc, num, src, dst, MMU.DMAStartTime[proc][num], taille,
-		(MMU.DMACrt[proc][num]&(1<<25))?"on":"off",MMU.DMACrt[proc][num]);
+		(MMU.DMACrt[proc][num]&(1<<25))?"on":"off",MMU.DMACrt[proc][num]);*/
 	
 	if(!(MMU.DMACrt[proc][num]&(1<<25)))
 		MMU.DMAStartTime[proc][num] = 0;
