@@ -747,48 +747,85 @@ fill_user_data_area( struct NDS_fw_config_data *user_settings,
 /* creates an firmware flash image, which contains all needed info to initiate a wifi connection */
 int NDS_CreateDummyFirmware( struct NDS_fw_config_data *user_settings)
 {
-  /*
-   * Create the firmware header
-   */
-  memset( MMU.fw.data, 0, 0x200);
+	const u8 FW_Mac[6] 	= { 0x00, 0x09, 0xBF, 0x12, 0x34, 0x56 };
+	/*
+	* Create the firmware header
+	*/
+	memset( MMU.fw.data, 0, 0x40000);
 
-  /* firmware identifier */
-  MMU.fw.data[0x8] = 'M';
-  MMU.fw.data[0x8 + 1] = 'A';
-  MMU.fw.data[0x8 + 2] = 'C';
-  MMU.fw.data[0x8 + 3] = 'P';
+	//firmware identifier
+	MMU.fw.data[0x8] = 'M';
+	MMU.fw.data[0x8 + 1] = 'A';
+	MMU.fw.data[0x8 + 2] = 'C';
+	MMU.fw.data[0x8 + 3] = 'P';
 
-  /* DS type */
-  if ( user_settings->ds_type == NDS_FW_DS_TYPE_LITE)
-    MMU.fw.data[0x1d] = 0x20;
-  else
-    MMU.fw.data[0x1d] = 0xff;
+	/* DS type */
+	if ( user_settings->ds_type == NDS_FW_DS_TYPE_LITE)
+		MMU.fw.data[0x1d] = 0x20;
+	else
+		MMU.fw.data[0x1d] = 0xff;
 
-  /* User Settings offset 0x3fe00 / 8 */
-  MMU.fw.data[0x20] = 0xc0;
-  MMU.fw.data[0x21] = 0x7f;
+	/* User Settings offset 0x3fe00 / 8 */
+	MMU.fw.data[0x20] = 0xc0;
+	MMU.fw.data[0x21] = 0x7f;
 
 
-  /*
-   * User settings (at 0x3FE00 and 0x3FE00)
-   */
-  fill_user_data_area( user_settings, &MMU.fw.data[ 0x3FE00], 0);
-  fill_user_data_area( user_settings, &MMU.fw.data[ 0x3FF00], 1);
+	/*
+	* User settings (at 0x3FE00 and 0x3FE00)
+	*/
+	fill_user_data_area( user_settings, &MMU.fw.data[ 0x3FE00], 0);
+	fill_user_data_area( user_settings, &MMU.fw.data[ 0x3FF00], 1);
   
+	// Wifi config length
+	MMU.fw.data[0x2C] = 0x38;
+	MMU.fw.data[0x2D] = 0x01;
+
+	MMU.fw.data[0x2E] = 0x00;
+
+	//Wifi version
+	MMU.fw.data[0x2F] = 0x00;
+	
+	//MAC address
+	/* Needed for Megaman Zero Collection otherwise we will get corrupted graphics */
+	memcpy((MMU.fw.data + 0x36), FW_Mac, sizeof(FW_Mac));
+
+	//Enabled channels
+	MMU.fw.data[0x3C] = 0xFE;
+	MMU.fw.data[0x3D] = 0x3F;
+
+	MMU.fw.data[0x3E] = 0xFF;
+	MMU.fw.data[0x3F] = 0xFF;
+
+	//RF related
+	MMU.fw.data[0x40] = 0x02;
+	MMU.fw.data[0x41] = 0x18;
+	MMU.fw.data[0x42] = 0x0C;
+
+	MMU.fw.data[0x43] = 0x01;
+
+	memset((MMU.fw.data + 0x154), 0x10, 0xE);
+
+	MMU.fw.data[0x162] = 0x19;
+	memset((MMU.fw.data + 0x163), 0xFF, 0x9D);
+
+	//Wifi settings CRC16
+	(*(u16*)(MMU.fw.data + 0x2A)) = calc_CRC16(0, (MMU.fw.data + 0x2C), 0x138);
   
+/*
 #ifdef EXPERIMENTAL_WIFI
 	memcpy(MMU.fw.data+0x36,FW_Mac,sizeof(FW_Mac)) ;
 	memcpy(MMU.fw.data+0x44,FW_WIFIInit,sizeof(FW_WIFIInit)) ;
-	MMU.fw.data[0x41] = 18 ; /* bits per RF value */
-	MMU.fw.data[0x42] = 12 ; /* # of RF values to init */
+	MMU.fw.data[0x41] = 18 ; //bits per RF value
+	MMU.fw.data[0x42] = 12 ; //# of RF values to init
 	memcpy(MMU.fw.data+0x64,FW_BBInit,sizeof(FW_BBInit)) ;
 	memcpy(MMU.fw.data+0xCE,FW_RFInit,sizeof(FW_RFInit)) ;
 	memcpy(MMU.fw.data+0xF2,FW_RFChannel,sizeof(FW_RFChannel)) ;
 	memcpy(MMU.fw.data+0x146,FW_BBChannel,sizeof(FW_BBChannel)) ;
 
-	memcpy(MMU.fw.data+0x03FA40,FW_WFCProfile,sizeof(FW_WFCProfile)) ;
+	memcpy(MMU.fw.data+0x03FA40,FW_WFCProfile,sizeof(FW_WFCProfile));
 #endif
-	return TRUE ;
+*/
+	return TRUE;
 }
 
 void
@@ -824,13 +861,13 @@ NDS_FillDefaultFirmwareConfigData( struct NDS_fw_config_data *fw_config) {
   /* default touchscreen calibration */
   fw_config->touch_cal[0].adc_x = 0x200;
   fw_config->touch_cal[0].adc_y = 0x200;
-  fw_config->touch_cal[0].screen_x = 0x20;
-  fw_config->touch_cal[0].screen_y = 0x20;
+  fw_config->touch_cal[0].screen_x = 0x20 + 1;
+  fw_config->touch_cal[0].screen_y = 0x20 + 1;
 
   fw_config->touch_cal[1].adc_x = 0xe00;
   fw_config->touch_cal[1].adc_y = 0x800;
-  fw_config->touch_cal[1].screen_x = 0xe0;
-  fw_config->touch_cal[1].screen_y = 0x80;
+  fw_config->touch_cal[1].screen_x = 0xe0 + 1;
+  fw_config->touch_cal[1].screen_y = 0x80 + 1;
 }
 
 int NDS_LoadFirmware(const char *filename)
