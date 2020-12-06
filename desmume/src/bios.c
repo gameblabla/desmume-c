@@ -963,32 +963,45 @@ u32 getVolumeTab(armcpu_t* cpu)
 
 u32 getCRC16(armcpu_t* cpu)
 {
-  unsigned int i,j;
-  
-  u32 crc = cpu->R[0];
-  u32 datap = cpu->R[1];
-  u32 size = cpu->R[2];
-  
-  static u16 val[] = { 0xC0C1,0xC181,0xC301,0xC601,0xCC01,0xD801,0xF001,0xA001 };
-  for(i = 0; i < size; i++)
-  {
-    crc = crc ^ MMU_read8( cpu->proc_ID, datap + i);
+	//dawn of sorrow uses this to checksum its save data;
+	//if this implementation is wrong, then it won't match what the real bios returns, 
+	//and savefiles created with a bios will be invalid when loaded with non-bios (and vice-versa).
+	//Once upon a time, desmume was doing this wrongly; this was due to its mis-use of high bits of the input CRC.
+	//Additionally, that implementation was not handling odd sizes and addresses correctly (but this was discovered independently)
+	//We have confirmed that the crc16 works the same on the arm9 and arm7.
+	//The following call is left here so we can A/B test with the old version. Glad I left it, because we keep coming back to this code.
+	//u32 old = getCRC16_old_and_broken<PROCNUM>(cpu->R[0],cpu->R[1],cpu->R[2]);
 
-    for(j = 0; j < 8; j++) {
-      int do_bit = 0;
+	u16 crc = (u16)cpu->R[0];
+	u32 datap = cpu->R[1];
+	u32 size = cpu->R[2]>>1;
+	u16 currVal = 0;
 
-      if ( crc & 0x1)
-        do_bit = 1;
+	const u16 val[] = { 0x0000,0xCC01,0xD801,0x1400,0xF001,0x3C00,0x2800,0xE401,0xA001,0x6C00,0x7800,0xB401,0x5000,0x9C01,0x8801,0x4400};
 
-      crc = crc >> 1;
+	for(u32 i = 0; i < size; i++)
+	{
+		currVal = MMU_read16( cpu->proc_ID, datap + i*2);
 
-      if ( do_bit) {
-        crc = crc ^ (val[j] << (7-j));
-      }
-    }
-  }
-  cpu->R[0] = crc;
-  return 1;
+		for(int j=0;j<4;j++)
+		{
+			u16 tabVal = val[crc&0xF];
+			crc >>= 4;
+			crc ^= tabVal;
+
+			u16 tempVal = currVal >> (4*j);
+			tabVal = val[tempVal&0xF];
+			crc ^= tabVal;
+		}
+	}
+
+	cpu->R[0] = crc;
+
+	//R3 contains the last processed halfword 
+	//this is significant -- why? Can we get a test case? Supposedly there is one..
+	cpu->R[3] = currVal;
+
+	return 1;
 }
 
 u32 SoundBias(armcpu_t* cpu)
