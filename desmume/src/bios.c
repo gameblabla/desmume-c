@@ -200,7 +200,22 @@ u32 bios_nop(armcpu_t * cpu)
 
 u32 delayLoop(armcpu_t * cpu)
 {
-     return cpu->R[0] * 4;
+	u32 elapsed;
+	//printf("%lld waitbyloop\n",nds_timer);
+	//INFO("ARM%c: SWI 0x03 (WaitByLoop)\n", PROCNUM?'7':'9');
+	if (cpu->proc_ID == ARMCPU_ARM9)
+	{
+		if ( (((armcp15_t *)(cpu->coproc[15]))->ctrl) & ((1<<16)|(1<<18)))		// DTCM or ITCM is on (cache)
+			elapsed = cpu->R[0] * 2;
+		else
+			elapsed = cpu->R[0] * 8;
+	}
+	else
+		elapsed = cpu->R[0] * 4;
+	cpu->R[0] = 0;
+	return elapsed;
+	
+     //return cpu->R[0] * 4;
 }
 
 //u32 oldmode[2];
@@ -304,9 +319,10 @@ u32 devide(armcpu_t* cpu)
      
      if(dnum==0) return 0;
      
-     cpu->R[0] = (u32)(num / dnum);
+	 s32 res = num / dnum;
+     cpu->R[0] = (u32)res;
      cpu->R[1] = (u32)(num % dnum);
-     cpu->R[3] = (u32) (((s32)cpu->R[0])<0 ? -cpu->R[0] : cpu->R[0]);
+     cpu->R[3] = (u32)abs(res);
      
      return 6;
 }
@@ -670,199 +686,235 @@ u32 RLUnCompWram(armcpu_t* cpu)
 
 u32 UnCompHuffman(armcpu_t* cpu)
 {
-  u32 source, dest, writeValue, header, treeStart, mask;
-  u32 data;
-  u8 treeSize, currentNode, rootNode;
-  int byteCount, byteShift, len, pos;
-  int writeData;
+	//this routine is used by the nintendo logo in the firmware boot screen
+	u32 source, dest, writeValue, header, treeStart, mask;
+	u32 data;
+	u8 treeSize, currentNode, rootNode;
+	int byteCount, byteShift, len, pos;
+	int writeData;
 
-  source = cpu->R[0];
-  dest = cpu->R[1];
+	source = cpu->R[0];
+	dest = cpu->R[1];
 
-  header = MMU_read8(cpu->proc_ID, source);
-  source += 4;
+	header = MMU_read32(cpu->proc_ID,source);
+	source += 4;
 
-  if(((source & 0xe000000) == 0) ||
-     ((source + ((header >> 8) & 0x1fffff)) & 0xe000000) == 0)
-    return 0;  
+	//INFO("swi uncomphuffman\n");
+
+	if(((source & 0xe000000) == 0) ||
+	((source + ((header >> 8) & 0x1fffff)) & 0xe000000) == 0)
+	return 0;  
   
-  treeSize = MMU_read8(cpu->proc_ID, source++);
+	treeSize = MMU_read8(cpu->proc_ID,source++);
 
-  treeStart = source;
+	treeStart = source;
 
-  source += ((treeSize+1)<<1)-1; // minus because we already skipped one byte
+	source += ((treeSize+1)<<1)-1; // minus because we already skipped one byte
   
-  len = header >> 8;
+	len = header >> 8;
 
-  mask = 0x80000000;
-  data = MMU_read8(cpu->proc_ID, source);
-  source += 4;
+	mask = 0x80000000;
+	data = MMU_read32(cpu->proc_ID,source);
+	source += 4;
 
-  pos = 0;
-  rootNode = MMU_read8(cpu->proc_ID, treeStart);
-  currentNode = rootNode;
-  writeData = 0;
-  byteShift = 0;
-  byteCount = 0;
-  writeValue = 0;
+	pos = 0;
+	rootNode = MMU_read8(cpu->proc_ID,treeStart);
+	currentNode = rootNode;
+	writeData = 0;
+	byteShift = 0;
+	byteCount = 0;
+	writeValue = 0;
 
-  if((header & 0x0F) == 8) {
-    while(len > 0) {
-      // take left
-      if(pos == 0)
-        pos++;
-      else
-        pos += (((currentNode & 0x3F)+1)<<1);
-      
-      if(data & mask) {
-        // right
-        if(currentNode & 0x40)
-          writeData = 1;
-        currentNode = MMU_read8(cpu->proc_ID, treeStart+pos+1);
-      } else {
-        // left
-        if(currentNode & 0x80)
-          writeData = 1;
-        currentNode = MMU_read8(cpu->proc_ID, treeStart+pos);
-      }
-      
-      if(writeData) {
-        writeValue |= (currentNode << byteShift);
-        byteCount++;
-        byteShift += 8;
+	if((header & 0x0F) == 8)
+	{
+		while(len > 0)
+		{
+		  // take left
+		  if(pos == 0)
+			pos++;
+		  else
+			pos += (((currentNode & 0x3F)+1)<<1);
+		  
+		  if(data & mask) {
+			// right
+			if(currentNode & 0x40)
+			  writeData = 1;
+			currentNode = MMU_read8(cpu->proc_ID,treeStart+pos+1);
+		  } else {
+			// left
+			if(currentNode & 0x80)
+			  writeData = 1;
+			currentNode = MMU_read8(cpu->proc_ID,treeStart+pos);
+		  }
+		  
+		  if(writeData) {
+			writeValue |= (currentNode << byteShift);
+			byteCount++;
+			byteShift += 8;
 
-        pos = 0;
-        currentNode = rootNode;
-        writeData = 0;
+			pos = 0;
+			currentNode = rootNode;
+			writeData = 0;
 
-        if(byteCount == 4) {
-          byteCount = 0;
-          byteShift = 0;
-          MMU_write8(cpu->proc_ID, dest, writeValue);
-          writeValue = 0;
-          dest += 4;
-          len -= 4;
-        }
-      }
-      mask >>= 1;
-      if(mask == 0) {
-        mask = 0x80000000;
-        data = MMU_read8(cpu->proc_ID, source);
-        source += 4;
-      }
-    }
-  } else {
-    int halfLen = 0;
-    int value = 0;
-    while(len > 0) {
-      // take left
-      if(pos == 0)
-        pos++;
-      else
-        pos += (((currentNode & 0x3F)+1)<<1);
+			if(byteCount == 4) {
+			  byteCount = 0;
+			  byteShift = 0;
+			  MMU_write32(cpu->proc_ID,dest, writeValue);
+			  writeValue = 0;
+			  dest += 4;
+			  len -= 4;
+			}
+		  }
+		  mask >>= 1;
+		  if(mask == 0) {
+			mask = 0x80000000;
+			data = MMU_read32(cpu->proc_ID,source);
+			source += 4;
+		  }
+		}
+	}
+	else
+	{
+		int halfLen = 0;
+		int value = 0;
+		while(len > 0) {
+		  // take left
+		  if(pos == 0)
+			pos++;
+		  else
+			pos += (((currentNode & 0x3F)+1)<<1);
 
-      if((data & mask)) {
-        // right
-        if(currentNode & 0x40)
-          writeData = 1;
-        currentNode = MMU_read8(cpu->proc_ID, treeStart+pos+1);
-      } else {
-        // left
-        if(currentNode & 0x80)
-          writeData = 1;
-        currentNode = MMU_read8(cpu->proc_ID, treeStart+pos);
-      }
-      
-      if(writeData) {
-        if(halfLen == 0)
-          value |= currentNode;
-        else
-          value |= (currentNode<<4);
+		  if((data & mask)) {
+			// right
+			if(currentNode & 0x40)
+			  writeData = 1;
+			currentNode = MMU_read8(cpu->proc_ID,treeStart+pos+1);
+		  } else {
+			// left
+			if(currentNode & 0x80)
+			  writeData = 1;
+			currentNode = MMU_read8(cpu->proc_ID,treeStart+pos);
+		  }
+		  
+		  if(writeData) {
+			if(halfLen == 0)
+			  value |= currentNode;
+			else
+			  value |= (currentNode<<4);
 
-        halfLen += 4;
-        if(halfLen == 8) {
-          writeValue |= (value << byteShift);
-          byteCount++;
-          byteShift += 8;
-          
-          halfLen = 0;
-          value = 0;
+			halfLen += 4;
+			if(halfLen == 8) {
+			  writeValue |= (value << byteShift);
+			  byteCount++;
+			  byteShift += 8;
+			  
+			  halfLen = 0;
+			  value = 0;
 
-          if(byteCount == 4) {
-            byteCount = 0;
-            byteShift = 0;
-            MMU_write8(cpu->proc_ID, dest, writeValue);
-            dest += 4;
-            writeValue = 0;
-            len -= 4;
-          }
-        }
-        pos = 0;
-        currentNode = rootNode;
-        writeData = 0;
-      }
-      mask >>= 1;
-      if(mask == 0) {
-        mask = 0x80000000;
-        data = MMU_read8(cpu->proc_ID, source);
-        source += 4;
-      }
-    }    
+			  if(byteCount == 4) {
+				byteCount = 0;
+				byteShift = 0;
+				MMU_write32(cpu->proc_ID,dest, writeValue);
+				dest += 4;
+				writeValue = 0;
+				len -= 4;
+			  }
+			}
+			pos = 0;
+			currentNode = rootNode;
+			writeData = 0;
+		  }
+		  mask >>= 1;
+		  if(mask == 0) {
+			mask = 0x80000000;
+			data = MMU_read32(cpu->proc_ID,source);
+			source += 4;
+		  }
+		}    
   }
   return 1;
 }
 
 u32 BitUnPack(armcpu_t* cpu)
 {
-  u32 source,dest,header,base,d,temp;
-  int len,bits,revbits,dataSize,data,bitwritecount,mask,bitcount,addBase;
-  u8 b;
+	u32 source,dest,header,base,temp;
+	int len,bits,revbits,dataSize,data,bitwritecount,mask,bitcount,addBase;
+	u8 b;
 
-  source = cpu->R[0];
-  dest = cpu->R[1];
-  header = cpu->R[2];
-  
-  len = MMU_read16(cpu->proc_ID, header);
-  // check address
-  bits = MMU_read8(cpu->proc_ID, header+2);
-  revbits = 8 - bits; 
-  // u32 value = 0;
-  base = MMU_read8(cpu->proc_ID, header+4);
-  addBase = (base & 0x80000000) ? 1 : 0;
-  base &= 0x7fffffff;
-  dataSize = MMU_read8(cpu->proc_ID, header+3);
+	source = cpu->R[0];
+	dest = cpu->R[1];
+	header = cpu->R[2];
 
-  data = 0; 
-  bitwritecount = 0; 
-  while(1) {
-    len -= 1;
-    if(len < 0)
-      break;
-    mask = 0xff >> revbits; 
-    b = MMU_read8(cpu->proc_ID, source); 
-    source++;
-    bitcount = 0;
-    while(1) {
-      if(bitcount >= 8)
-        break;
-      d = b & mask;
-      temp = d >> bitcount;
-      if(!temp && addBase) {
-        temp += base;
-      }
-      data |= temp << bitwritecount;
-      bitwritecount += dataSize;
-      if(bitwritecount >= 32) {
-        MMU_write8(cpu->proc_ID, dest, data);
-        dest += 4;
-        data = 0;
-        bitwritecount = 0;
-      }
-      mask <<= bits;
-      bitcount += bits;
-    }
-  }
-  return 1;
+	len = MMU_read16(cpu->proc_ID,header);
+	bits = MMU_read8(cpu->proc_ID,header+2);
+	switch (bits)
+	{
+	case 1:
+	case 2:
+	case 4:
+	case 8:
+		break;
+	default: 
+		return (0);	// error
+	}
+	dataSize = MMU_read8(cpu->proc_ID,header+3);
+	switch (dataSize)
+	{
+	case 1:
+	case 2:
+	case 4:
+	case 8:
+	case 16:
+	case 32:
+		break;
+	default: 
+		return (0);	// error
+	}
+
+	revbits = 8 - bits; 
+	base = MMU_read32(cpu->proc_ID,header+4);
+	addBase = (base & 0x80000000) ? 1 : 0;
+	base &= 0x7fffffff;
+
+	//INFO("SWI10: bitunpack src 0x%08X dst 0x%08X hdr 0x%08X (src len %05i src bits %02i dst bits %02i)\n\n", source, dest, header, len, bits, dataSize);
+
+	data = 0; 
+	bitwritecount = 0; 
+	while(1) {
+		len -= 1;
+		if(len < 0)
+			break;
+		mask = 0xff >> revbits; 
+		b = MMU_read8(cpu->proc_ID,source); 
+		source++;
+		bitcount = 0;
+		while(1) {
+			if(bitcount >= 8)
+				break;
+			temp = b & mask;
+			if(temp)
+				temp += base;
+			else if(addBase)
+				temp += base;
+
+			//you might think you should do this. but you would be wrong!
+			//this is meant for palette adjusting things, i.e. 16col data to 256col data in colors 240..255. In that case theres no modulo normally.
+			//Users expecting modulo have done something wrong anyway.
+			//temp &= (1<<bits)-1;
+
+			data |= temp << bitwritecount;
+			bitwritecount += dataSize;
+			if(bitwritecount >= 32) {
+				MMU_write32(cpu->proc_ID,dest, data);
+				dest += 4;
+				data = 0;
+				bitwritecount = 0;
+			}
+			bitcount += bits;
+			b >>= bits;
+		}
+	}
+	return 1;
 }
 
 u32 Diff8bitUnFilterWram(armcpu_t* cpu)
@@ -1004,6 +1056,22 @@ u32 getCRC16(armcpu_t* cpu)
 	return 1;
 }
 
+static u32 isDebugger(armcpu_t* cpu)
+{
+	//gbatek has additional specifications which are not emulated here
+	cpu->R[0] = 0;
+	return 1;
+}
+
+//ARM7 only
+static u32 getBootProcs(armcpu_t* cpu)
+{
+	cpu->R[0] = 0x00000A2E;
+	cpu->R[1] = 0x00002C3C;
+	cpu->R[3] = 0x000005FF;
+	return 1;
+}
+
 u32 SoundBias(armcpu_t* cpu)
 {
      u32 current = SPU_ReadLong(0x4000504);
@@ -1014,8 +1082,14 @@ u32 SoundBias(armcpu_t* cpu)
      return cpu->R[1];
 }
 
+static u32 SoftReset(armcpu_t* cpu)
+{
+	//not emulated yet
+	return 1;
+}
+
 u32 (* ARM9_swi_tab[32])(armcpu_t* cpu)={
-         bios_nop,             // 0x00
+         SoftReset,             // 0x00
          bios_nop,             // 0x01
          bios_nop,             // 0x02
          delayLoop,            // 0x03
@@ -1030,7 +1104,7 @@ u32 (* ARM9_swi_tab[32])(armcpu_t* cpu)={
          fastCopy,             // 0x0C
          bios_sqrt,            // 0x0D
          getCRC16,             // 0x0E
-         bios_nop,             // 0x0F
+         isDebugger,           // 0x0F
          BitUnPack,            // 0x10
          LZ77UnCompWram,       // 0x11
          LZ77UnCompVram,       // 0x12
@@ -1050,7 +1124,7 @@ u32 (* ARM9_swi_tab[32])(armcpu_t* cpu)={
 };
 
 u32 (* ARM7_swi_tab[32])(armcpu_t* cpu)={
-         bios_nop,             // 0x00
+         SoftReset,             // 0x00
          bios_nop,             // 0x01
          bios_nop,             // 0x02
          delayLoop,            // 0x03
@@ -1065,7 +1139,7 @@ u32 (* ARM7_swi_tab[32])(armcpu_t* cpu)={
          fastCopy,             // 0x0C
          bios_sqrt,            // 0x0D
          getCRC16,             // 0x0E
-         bios_nop,             // 0x0F
+         isDebugger,           // 0x0F
          BitUnPack,            // 0x10
          LZ77UnCompWram,       // 0x11
          LZ77UnCompVram,       // 0x12
@@ -1079,7 +1153,7 @@ u32 (* ARM7_swi_tab[32])(armcpu_t* cpu)={
          getSineTab,           // 0x1A
          getPitchTab,          // 0x1B
          getVolumeTab,         // 0x1C
-         bios_nop,             // 0x1D
+         getBootProcs,         // 0x1D
          bios_nop,             // 0x1E
          setHaltCR,            // 0x1F
 };
