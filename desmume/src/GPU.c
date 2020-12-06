@@ -1523,6 +1523,9 @@ void sprite1D(GPU * gpu, u16 l, u8 * dst, u8 * prioTab)
 
 			if (spriteInfo->Mode == 3)              /* sprite is in BMP format */
 			{
+				//transparent (i think, dont bother to render?) if alpha is 0
+				if(spriteInfo->PaletteIndex == 0)
+					continue;
 					/* sprMemory + sprBoundary + 16Bytes per line (8pixels a 2 bytes) */
 					//src = (gpu->sprMem) + (spriteInfo->TileIndex<<4) + (y<<gpu->sprBMPBoundary);
 				// FIXME:this no correct, but work ???
