@@ -2050,15 +2050,13 @@ void GPU_ligne(NDS_Screen * screen, u16 l)
 	c = T1ReadWord(ARM9Mem.ARM9_VMEM, gpu->core * 0x400);
 	
 	// init background color & priorities
-	/*for(i = 0; i< 256; ++i)
+	for(i = 0; i< 256; ++i)
 	{
 		T2WriteWord(dst, i << 1, c);
 		T2WriteWord(spr, i << 1, c);
 		sprPrio[i]=0xFF;
 		sprWin[i]=0;
-	}*/
-	memset(sprPrio,0xFF,256);
-	memset(sprWin,0,256);
+	}
 	
 	// init pixels priorities
 	for (i=0;i<NB_PRIORITIES;i++) {
