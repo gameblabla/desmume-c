@@ -2,7 +2,7 @@
   CFLASH.H
   Mic, 2006
 */
-
+#ifdef CFLASH_EMU
 #ifndef __CFLASH_H__
 #define __CFLASH_H__
 
@@ -29,4 +29,5 @@ void cflash_close( void);
 }
 #endif
 
+#endif
 #endif

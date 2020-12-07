@@ -19,6 +19,8 @@
 	
 */
 
+#ifdef CFLASH_EMU
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -822,3 +824,4 @@ cflash_close( void) {
   }
 }
 
+#endif

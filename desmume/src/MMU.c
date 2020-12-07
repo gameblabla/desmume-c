@@ -601,9 +601,11 @@ u8 FASTCALL MMU_read8(u32 proc, u32 adr)
 		return T1ReadByte(ARM9Mem.ARM9_ITCM, adr&0x7FFF);
 	}
 
+	#ifdef CFLASH_EMU
 	// CFlash reading, Mic
 	if ((adr>=0x9000000)&&(adr<0x9900000))
 		return (unsigned char)cflash_read(adr);
+	#endif
 
 	// Address is an IO register
 	if ((adr >> 24) == 4)
@@ -658,10 +660,11 @@ u16 FASTCALL MMU_read16(u32 proc, u32 adr)
 		return T1ReadWord(ARM9Mem.ARM9_ITCM, adr&0x7FFF);	
 	}
 	
+	#ifdef CFLASH_EMU
 	// CFlash reading, Mic
 	if ((adr>=0x08800000)&&(adr<0x09900000))
 	   return (unsigned short)cflash_read(adr);
-
+	#endif
 	adr &= 0x0FFFFFFF;
 
 	if(adr&0x04000000)
@@ -737,10 +740,11 @@ u32 FASTCALL MMU_read32(u32 proc, u32 adr)
 		return T1ReadLong(ARM9Mem.ARM9_ITCM, adr&0x7FFF);
 	}
 	
+	#ifdef CFLASH_EMU
 	// CFlash reading, Mic
 	if ((adr>=0x9000000)&&(adr<0x9900000))
 	   return (unsigned long)cflash_read(adr);
-		
+	#endif
 	adr &= 0x0FFFFFFF;
 
 	if((adr >> 24) == 4)
@@ -938,23 +942,26 @@ void FASTCALL MMU_write8(u32 proc, u32 adr, u8 val)
 		T1WriteByte(ARM9Mem.ARM9_ITCM, adr&0x7FFF, val);
 		return ;
 	}
+	
+	#ifdef CFLASH_EMU
 	// CFlash writing, Mic
 	if ((adr>=0x9000000)&&(adr<0x9900000)) {
 		cflash_write(adr,val);
 		return;
 	}
-
+	#endif
 	adr &= 0x0FFFFFFF;
 
     // This is bad, remove it
-    if(proc == ARMCPU_ARM7)
+    // Gameblabla:  I disabled it instead
+    /*if(proc == ARMCPU_ARM7)
     {
         if ((adr>=0x04000400)&&(adr<0x0400051D))
         {
             SPU_WriteByte(adr, val);
             return;
         }
-    }
+    }*/
 
 	
 	/*if ((adr & 0xFF800000) == 0x04800000)
@@ -1326,12 +1333,14 @@ void FASTCALL MMU_write16(u32 proc, u32 adr, u16 val)
 		return ;
 	}
 
+	#ifdef CFLASH_EMU
 	// CFlash writing, Mic
 	if ((adr>=0x08800000)&&(adr<0x09900000))
 	{
 		cflash_write(adr,val);
 		return;
 	}
+	#endif
 
 	/* wifi mac access */
 	/*if ((proc==ARMCPU_ARM7) && (adr>=0x04800000)&&(adr<0x05000000))
@@ -1979,11 +1988,13 @@ void FASTCALL MMU_write32(u32 proc, u32 adr, u32 val)
 		return ;
 	}
 	
+	#ifdef CFLASH_EMU
 	// CFlash writing, Mic
 	if ((adr>=0x9000000)&&(adr<0x9900000)) {
 	   cflash_write(adr,val);
 	   return;
 	}
+	#endif
 
 	adr &= 0x0FFFFFFF;
 

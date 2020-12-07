@@ -369,8 +369,11 @@ int NDS_LoadROM( const char *filename, int bmtype, u32 bmsize,
    /* I guess any directory can be used
     * so the current one should be ok */
    strncpy(szRomPath, ".", 512); /* "." is shorter then 512, yet strcpy should be avoided */
+   
+   #ifdef CFLASH_EMU
    cflash_close();
    cflash_init( cflash_disk_image_file);
+   #endif
 
    strncpy(szRomBaseName, filename,512);
 
