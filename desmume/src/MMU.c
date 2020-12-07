@@ -1576,7 +1576,7 @@ void FASTCALL MMU_write16(u32 proc, u32 adr, u16 val)
 							break;
 							
                                                 case 1 : /* firmware memory device */
-                                                        if(spicnt & 0x3 != 0)      /* check SPI baudrate (must be 4mhz) */
+                                                        if((spicnt & 0x3) != 0)      /* check SPI baudrate (must be 4mhz) */
 							{
 								T1WriteWord(MMU.MMU_MEM[proc][(REG_SPIDATA >> 20) & 0xff], REG_SPIDATA & 0xfff, 0);
 								break;
@@ -2902,7 +2902,7 @@ void FASTCALL MMU_write32(u32 proc, u32 adr, u32 val)
 				return;
                         case REG_GCROMCTRL :
 				{
-					int i;
+					uint32_t i;
 
                                         if(MEM_8(MMU.MMU_MEM[proc], REG_GCCMDOUT) == 0xB7)
 					{
