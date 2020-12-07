@@ -284,6 +284,11 @@ void set_mouse_coord(signed long x,signed long y)
 /* Update NDS keypad */
 void update_keypad(u16 keys)
 {
+#if GKD350H
+	extern uint_fast8_t sdl_quit;
+	if (keys == 12) sdl_quit = 1;
+#endif
+	
   ((u16 *)ARM9Mem.ARM9_REG)[0x130>>1] = ~keys & 0x3FF;
   ((u16 *)MMU.ARM7_REG)[0x130>>1] = ~keys & 0x3FF;
   /* Update X and Y buttons */
@@ -405,6 +410,10 @@ process_ctrls_events( u16 *keypad,
             break;
 
           case SDL_KEYUP:
+			if (event.key.keysym.sym == SDLK_HOME)
+			{
+				cause_quit = 1;
+			}
             key = lookup_key(event.key.keysym.sym);
             RM_KEY( *keypad, key );
             break;

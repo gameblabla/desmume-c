@@ -44,6 +44,7 @@
 #include "../render3D.h"
 //#include "../opengl_collector_3Demu.h"
 
+uint_fast8_t sdl_quit = 0;
 volatile BOOL execute = FALSE;
 static float nds_screen_size_ratio = 1.0f;
 SDL_Surface * sdl_screen, *rl_screen;
@@ -116,7 +117,6 @@ static const uint32_t TblSkip[5][5] = {
 int main(int argc, char ** argv) {
 	static unsigned short keypad = 0;
 	u32 last_cycle = 0;
-	int sdl_quit = 0;
 
 #ifdef DISPLAY_FPS
 	u32 fps_timing = 0;
