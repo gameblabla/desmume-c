@@ -6624,7 +6624,7 @@ static u32 FASTCALL  OP_LDMDB(armcpu_t *cpu)
 
 static u32 FASTCALL  OP_LDMIA_W(armcpu_t *cpu)
 {
-     u32 i = cpu->instruction, c = 0, count;
+     u32 i = cpu->instruction, c = 0;
      u32 start = cpu->R[REG_POS(i,16)];
 	 u32 bitList = (~((2 << REG_POS(i,16))-1)) & 0xFFFF;
      
@@ -6669,7 +6669,7 @@ static u32 FASTCALL  OP_LDMIA_W(armcpu_t *cpu)
 
 static u32 FASTCALL  OP_LDMIB_W(armcpu_t *cpu)
 {
-     u32 i = cpu->instruction, c = 0, count;
+     u32 i = cpu->instruction, c = 0;
      u32 start = cpu->R[REG_POS(i,16)];
 	 u32 bitList = (~((2 << REG_POS(i,16))-1)) & 0xFFFF;
      
@@ -6716,7 +6716,7 @@ static u32 FASTCALL  OP_LDMIB_W(armcpu_t *cpu)
 
 static u32 FASTCALL  OP_LDMDA_W(armcpu_t *cpu)
 {
-	u32 i = cpu->instruction, c = 0, count;
+	u32 i = cpu->instruction, c = 0;
 	u32 start = cpu->R[REG_POS(i,16)];
 	u32 bitList = (~((2 << REG_POS(i,16))-1)) & 0xFFFF;
 
@@ -6761,7 +6761,7 @@ static u32 FASTCALL  OP_LDMDA_W(armcpu_t *cpu)
 
 static u32 FASTCALL  OP_LDMDB_W(armcpu_t *cpu)
 {
-	u32 i = cpu->instruction, c = 0, count;
+	u32 i = cpu->instruction, c = 0;
 	u32 start = cpu->R[REG_POS(i,16)];
 	u32 bitList = (~((2 << REG_POS(i,16))-1)) & 0xFFFF;
 	u32 * registres = cpu->R;
@@ -7145,8 +7145,8 @@ static u32 FASTCALL  OP_LDMIB2_W(armcpu_t *cpu)
           return c + 2;
      }
 
-     registres[REG_POS(i,16)] = start + 4;
-     tmp = READ32(cpu->mem_if->data, start + 4);
+     registres[REG_POS(i,16)] = (start + 4);
+     tmp = READ32(cpu->mem_if->data, (start + 4));
      registres[15] = tmp & (0XFFFFFFFC | (BIT0(tmp)<<1));
      cpu->CPSR = cpu->SPSR;
      cpu->next_instruction = registres[15];
@@ -7700,11 +7700,11 @@ OP_LDRD_STRD_POST_INDEX( armcpu_t *cpu) {
     /* Store/Load */
     if ( BIT5(i)) {
       WRITE32(cpu->mem_if->data, addr, cpu->R[Rd_num]);
-      WRITE32(cpu->mem_if->data, addr + 4, cpu->R[Rd_num + 1]);
+      WRITE32(cpu->mem_if->data, (addr + 4), cpu->R[Rd_num + 1]);
     }
     else {
       cpu->R[Rd_num] = READ32(cpu->mem_if->data, addr);
-      cpu->R[Rd_num + 1] = READ32(cpu->mem_if->data, addr + 4);
+      cpu->R[Rd_num + 1] = READ32(cpu->mem_if->data, (addr + 4));
     }
   }
 
@@ -7744,11 +7744,11 @@ OP_LDRD_STRD_OFFSET_PRE_INDEX( armcpu_t *cpu) {
     /* Store/Load */
     if ( BIT5(i)) {
       WRITE32(cpu->mem_if->data, addr, cpu->R[Rd_num]);
-      WRITE32(cpu->mem_if->data, addr + 4, cpu->R[Rd_num + 1]);
+      WRITE32(cpu->mem_if->data, (addr + 4), cpu->R[Rd_num + 1]);
     }
     else {
       cpu->R[Rd_num] = READ32(cpu->mem_if->data, addr);
-      cpu->R[Rd_num + 1] = READ32(cpu->mem_if->data, addr + 4);
+      cpu->R[Rd_num + 1] = READ32(cpu->mem_if->data, (addr + 4));
     }
   }
 

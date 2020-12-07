@@ -52,31 +52,8 @@
 #include "cflash.h"
 #include "NDSSystem.h"
 
-#ifdef WIN32
-#include <stdarg.h>
-#include <windows.h>
-static void
-debug_output( const char *fmt, ...) {
-  char debug_string[2048];
-  va_list ap;
-  va_start( ap, fmt);
 
-  vsprintf( debug_string, fmt, ap);
-  OutputDebugStringA( debug_string);
-
-  va_end( ap);
-}
-#endif
-
-#if 1
-#ifdef WIN32
-#define LOCAL_LOG debug_output
-#else
-#define LOCAL_LOG( fmt, ...) printf("CFLASH: ");printf( fmt, ##__VA_ARGS__)
-#endif
-#else
 #define LOCAL_LOG( fmt, ...)
-#endif
 
 static int use_disk_image_file = 0;
 
@@ -121,7 +98,7 @@ static u32 filesysFAT,filesysRootDir,filesysData;
 static u16 FAT16[SECPERFAT*256];
 static u16 numExtraEntries[SECPERFAT*256];
 static DIR_ENT *extraDirEntries[SECPERFAT*256];
-static int numFiles,maxLevel,dirNum,numRootFiles;
+static int numFiles,maxLevel,numRootFiles;
 static int *dirEntriesInCluster, clusterNum, firstDirEntCluster,
   lastDirEntCluster, lastFileDataCluster;
 static char *sRomPath;
@@ -129,12 +106,9 @@ static int activeDirEnt=-1;
 static u32 bufferStart;
 static u32 fileStartLBA,fileEndLBA;
 static u16 freadBuffer[256];
-static u32 dwBytesRead;
 static FILE * hFile;
 static char fpath[255+1];
 static BOOL cflashDeviceEnabled = FALSE;
-static char buffer[256];
-static u32 dummy;
 
 static int lfn_checksum( void) {
 	int i;
@@ -255,7 +229,6 @@ static void list_files(char *fpath) {
 	char			DirSpec[255 + 1],SubDir[255+1];
 	u32			dwError;
 	char			*fname;
-	int				i,j;
 	int fileLevel;
 
 	maxLevel++;
@@ -307,12 +280,10 @@ static void list_files(char *fpath) {
 /* Set up the MBR, FAT and DIR_ENTs */
 static BOOL cflash_build_fat( void) {
 	int i,j,k,l,
-		clust,baseCluster,numClusters,
+		clust,numClusters,
 		clusterNum2,rootCluster;
-	int fileLevel;
 
 	numFiles  = 0;
-	fileLevel = -1;
 	maxLevel  = -1;
 
 	sRomPath  = szRomPath;   // From MMU.cpp
@@ -577,7 +548,6 @@ static void resolve_path(int dirent) {
 /* Read from a file using a 512 byte buffer */
 static u16 fread_buffered(int dirent,u32 cluster,u32 offset) {
 	char fname[2*NAME_LEN+EXT_LEN];
-	int i,j;
 
 	offset += cluster*512*SECPERCLUS;
 
@@ -623,8 +593,6 @@ unsigned int
 cflash_read(unsigned int address) {
   unsigned int ret_value = 0;
 #define BUFFERED_BLOCK_SIZE 512
-  static u8 block_buffer[BUFFERED_BLOCK_SIZE];
-  static s32 buffered_start_index = -1;
 
   switch ( address) {
   case CF_REG_STS:
@@ -767,13 +735,12 @@ cflash_write(unsigned int address,unsigned int data) {
 
           if ( currLBA + 512 < file_size) {
             size_t written = 0;
-            int i;
 
             if ( disk_image != -1) {
               LSEEK_FN( disk_image, currLBA, SEEK_SET);
               
               while( written < 512) {
-                size_t cur_write =
+                int32_t cur_write =
                   WRITE_FN( disk_image, &sector_data[written], 512 - written);
                 written += cur_write;
 

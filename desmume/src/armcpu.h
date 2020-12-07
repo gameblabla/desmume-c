@@ -50,8 +50,7 @@ extern "C" {
 #define SIGNED_OVERFLOW(a,b,c) ((BIT31(a)&BIT31(b)&BIT31(~c))|\
 								(BIT31(~a)&BIT31(~(b))&BIT31(c)))
 
-#define SIGNED_UNDERFLOW(a,b,c) ((BIT31(a)&BIT31(~(b))&BIT31(~c))|\
-								(BIT31(~a)&BIT31(b)&BIT31(c)))
+#define SIGNED_UNDERFLOW(a,b,c) (BIT31(((a)&(~(b))&(~c)) | ((~a)&(b)&(c))))
 
 #define EQ	0x0
 #define NE	0x1
