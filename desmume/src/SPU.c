@@ -492,7 +492,7 @@ void SPU_WriteByte(u32 addr, u8 val)
             T1WriteByte(MMU.ARM7_REG, addr, val);
             return;
          default:
-            LOG("Unsupported Sound Register byte write: %08X %02X\n", addr, val);
+            //LOG("Unsupported Sound Register byte write: %08X %02X\n", addr, val);
             T1WriteByte(MMU.ARM7_REG, addr, val);
             break;
       }
