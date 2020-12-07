@@ -256,7 +256,9 @@ void GPU_resortBGs(GPU *gpu)
 
 void GPU_setMasterBrightness (GPU *gpu, u16 val)
 {
-	gpu->MasterBrightFactor = (val & 0x1F);
+	u8 temp = (val&31);
+
+	gpu->MasterBrightFactor = (temp > 16 ? 16 : temp);
 	gpu->MasterBrightMode	= (val>>14);
 }
 
