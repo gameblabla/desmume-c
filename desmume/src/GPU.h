@@ -816,6 +816,17 @@ void SetupFinalPixelBlitter (GPU *gpu);
 
 #define GPU_setBLDY_EVY(gpu, val) {gpu->BLDY_EVY = (val&0x1f) > 16 ? 16 : (val&0x1f);}
 
+ #define min(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a < _b ? _a : _b; })
+
+ #define max(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a > _b ? _a : _b; })
+
+
 #ifdef __cplusplus
 }
 #endif

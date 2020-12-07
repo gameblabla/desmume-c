@@ -57,6 +57,8 @@ NDS_Screen SubScreen;
 
 u8 GPU_screen[4*256*192];
 
+u8 sprWin[256];
+
 short sizeTab[4][4][2] =
 {
       {{256,256}, {512, 256}, {256, 512}, {512, 512}},
@@ -204,7 +206,11 @@ void GPU_resortBGs(GPU *gpu)
 	struct _DISPCNT * cnt = &gpu->dispx_st->dispx_DISPCNT.bits;
 	itemsForPriority_t * item;
 
-	memset(gpu->sprWin,0, 256*256);
+	//zero 29-dec-2008 - this really doesnt make sense to me.
+	//i changed the sprwin to be line by line,
+	//and resetting it here is pointless since line rendering is instantaneous
+	//and completely produces and consumes sprwin after which the contents of this buffer are useless
+	//memset(gpu->sprWin,0, 256*256);
 
 	// we don't need to check for windows here...
 // if we tick boxes, invisible layers become invisible & vice versa
@@ -455,7 +461,7 @@ static INLINE void renderline_checkWindows(const GPU *gpu, u8 bgnum, u16 x, u16 
 	{
 		// it is in winOBJ, do we display ?
 		// low priority
-		if (gpu->sprWin[y][x])
+		if (sprWin[x])
 		{
 			*draw	= (gpu->WINOBJ >> bgnum)&1;
 			*effect	= (gpu->WINOBJ_SPECIAL);
@@ -1228,7 +1234,7 @@ INLINE void render_sprite_Win (GPU * gpu, u16 l, u8 * src,
 	u16 x1;
 	if (col256) {
 		for(i = 0; i < lg; i++, sprX++,x+=xdir)
-			gpu->sprWin[l][sprX] = (src[x])?1:0;
+			sprWin[sprX] = (src[x])?1:0;
 	} else {
 		for(i = 0; i < lg; i++, ++sprX, x+=xdir)
 		{
@@ -1236,7 +1242,7 @@ INLINE void render_sprite_Win (GPU * gpu, u16 l, u8 * src,
 			palette = src[(x1&0x3) + ((x1&0xFFFC)<<3)];
 			if (x & 1) palette_entry = palette >> 4;
 			else       palette_entry = palette & 0xF;
-			gpu->sprWin[l][sprX] = (palette_entry)?1:0;
+			sprWin[sprX] = (palette_entry)?1:0;
 		}
 	}
 }
@@ -2049,7 +2055,7 @@ void GPU_ligne(NDS_Screen * screen, u16 l)
 		T2WriteWord(dst, i << 1, c);
 		T2WriteWord(spr, i << 1, c);
 		sprPrio[i]=0xFF;
-		gpu->sprWin[l][i]=0;
+		sprWin[i]=0;
 	}
 	
 	// init pixels priorities
