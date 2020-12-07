@@ -20,7 +20,7 @@
 #ifndef SNDSDL_H
 #define SNDSDL_H
 
-#define SNDCORE_SDL 2
+#define SNDCORE_SDL 1
 
 extern SoundInterface_struct SNDSDL;
 #endif

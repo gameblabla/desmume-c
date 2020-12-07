@@ -54,7 +54,6 @@ SDL_Surface * sdl_screen, *rl_screen;
 
 SoundInterface_struct *SNDCoreList[] = {
   &SNDDummy,
-  &SNDFile,
   &SNDSDL,
   NULL
 };
