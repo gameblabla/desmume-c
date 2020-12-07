@@ -1,3 +1,5 @@
+#ifndef GKD350H
+
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -139,3 +141,5 @@ void scale_256x384_to_160x240(uint32_t* restrict dst, uint32_t* restrict src)
         }
     }
 }
+
+#endif
