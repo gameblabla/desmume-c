@@ -872,6 +872,42 @@ u32 FASTCALL MMU_read32(u32 proc, u32 adr)
             case REG_GCDATAIN:
 			{
                     u32 val=0;
+                    
+					if(MMU.dscard[ARMCPU_ARM9].transfer_count == 0)
+						return 0;
+
+					switch(MEM_8(MMU.MMU_MEM[ARMCPU_ARM9], REG_GCCMDOUT))
+					{
+						/* Dummy */
+						case 0x9F:
+							{
+								val = 0xFFFFFFFF;
+							}
+							break;
+
+						/* Data read */
+						case 0x00:
+						case 0xB7:
+							{
+								/* TODO: prevent read if the address is out of range */
+								/* Make sure any reads below 0x8000 redirect to 0x8000+(adr%0x1FF) as on real cart */
+								if(MMU.dscard[ARMCPU_ARM9].adress < 0x8000)
+								{
+									MMU.dscard[ARMCPU_ARM9].adress = (0x8000 + (MMU.dscard[ARMCPU_ARM9].adress&0x1FF));
+								}
+								val = T1ReadLong(MMU.CART_ROM, MMU.dscard[ARMCPU_ARM9].adress);
+							}
+							break;
+
+						/* Get ROM chip ID */
+						case 0x90:
+						case 0xB8:
+							{
+								/* TODO */
+								val = 0x00000000;
+							}
+							break;
+					}
 
                     if(MMU.dscard[proc].adress)
 						val = T1ReadLong(MMU.CART_ROM, MMU.dscard[proc].adress);
