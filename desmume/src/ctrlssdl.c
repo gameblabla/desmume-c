@@ -141,13 +141,14 @@ process_ctrls_events( u16 *keypad,
 			set_mouse_coord(scaled_x, scaled_y);
 		}
 #ifdef GKD350H
-		if (keys[SDLK_BACKSPACE] && keys[SDLK_LALT]) mouse_mode = 0;
+		else if (keys[SDLK_BACKSPACE] && keys[SDLK_LALT]) mouse_mode = 0;
 #endif
 	}
 #ifdef GKD350H
 	else
 	{
 		if (keys[SDLK_TAB] && keys[SDLK_LALT]) mouse_mode = 1;
+		else if (keys[SDLK_RETURN] && keys[SDLK_ESCAPE]) cause_quit = 1;
 	}
 #endif
 

@@ -4,21 +4,21 @@
 #include <stdlib.h>
 
 //from BGR555
-#define cR(A) ((A) & 0x001f)
-#define cG(A) (((A) & 0x03e0) >> 5)
-#define cB(A) (((A) & 0x7c00) >> 10)
+#define cR(A) (((A) & 0x001f) << 3)
+#define cG(A) (((A) & 0x03e0) >> 2)
+#define cB(A) (((A) & 0x7c00) >> 7)
 //to BGR555
-#define Weight1_1(A, B)  ((((cB(A) + cB(B)) >> 1) & 0x1f) << 10 | (((cG(A) + cG(B)) >> 1) & 0x1f) << 5 | (((cR(A) + cR(B)) >> 1) & 0x1f))
-#define Weight5_3(A, B)  (((((cB(A) * 5) + (cB(B) * 3)) >> 3) & 0x1f) << 10 | ((((cG(A) * 5) + (cG(B) * 3)) >> 3) & 0x1f) << 5 | ((((cR(A) * 5) + (cR(B) * 3)) >> 3) & 0x1f))
-#define Weight3_5(A, B)  (((((cB(A) * 3) + (cB(B) * 5)) >> 3) & 0x1f) << 10 | ((((cG(A) * 3) + (cG(B) * 5)) >> 3) & 0x1f) << 5 | ((((cR(A) * 3) + (cR(B) * 5)) >> 3) & 0x1f))
-#define Weight2_6(A, B)  (((((cB(A) * 2) + (cB(B) * 6)) >> 3) & 0x1f) << 10 | ((((cG(A) * 2) + (cG(B) * 6)) >> 3) & 0x1f) << 5 | ((((cR(A) * 2) + (cR(B) * 6)) >> 3) & 0x1f))
-#define Weight6_2(A, B)  (((((cB(A) * 6) + (cB(B) * 2)) >> 3) & 0x1f) << 10 | ((((cG(A) * 6) + (cG(B) * 2)) >> 3) & 0x1f) << 5 | ((((cR(A) * 6) + (cR(B) * 2)) >> 3) & 0x1f))
+#define Weight1_1(A, B)  ((((cB(A) + cB(B)) >> 1) & 0xf8) << 7 | (((cG(A) + cG(B)) >> 1) & 0xf8) << 2 | (((cR(A) + cR(B)) >> 1) & 0xf8) >> 3)
+#define Weight5_3(A, B)  (((((cB(A) * 5) + (cB(B) * 3)) >> 3) & 0xf8) << 7 | ((((cG(A) * 5) + (cG(B) * 3)) >> 3) & 0xf8) << 2 | ((((cR(A) * 5) + (cR(B) * 3)) >> 3) & 0xf8) >> 3)
+#define Weight3_5(A, B)  (((((cB(A) * 3) + (cB(B) * 5)) >> 3) & 0xf8) << 7 | ((((cG(A) * 3) + (cG(B) * 5)) >> 3) & 0xf8) << 2 | ((((cR(A) * 3) + (cR(B) * 5)) >> 3) & 0xf8) >> 3)
+#define Weight2_6(A, B)  (((((cB(A) * 2) + (cB(B) * 6)) >> 3) & 0xf8) << 7 | ((((cG(A) * 2) + (cG(B) * 6)) >> 3) & 0xf8) << 2 | ((((cR(A) * 2) + (cR(B) * 6)) >> 3) & 0xf8) >> 3)
+#define Weight6_2(A, B)  (((((cB(A) * 6) + (cB(B) * 2)) >> 3) & 0xf8) << 7 | ((((cG(A) * 6) + (cG(B) * 2)) >> 3) & 0xf8) << 2 | ((((cR(A) * 6) + (cR(B) * 2)) >> 3) & 0xf8) >> 3)
 //to RGB565
-#define WeightB1_1(A, B)  ((((cR(A) + cR(B)) >> 1) & 0x1f) << 11 | ((cG(A) + cG(B)) & 0x3f) << 5 | (((cB(A) + cB(B)) >> 1) & 0x1f))
-#define WeightB5_3(A, B)  (((((cR(A) * 5) + (cR(B) * 3)) >> 3) & 0x1f) << 11 | ((((cG(A) * 5) + (cG(B) * 3)) >> 2) & 0xfc) << 5 | ((((cB(A) * 5) + (cB(B) * 3)) >> 3) & 0x1f))
-#define WeightB3_5(A, B)  (((((cR(A) * 3) + (cR(B) * 5)) >> 3) & 0x1f) << 11 | ((((cG(A) * 3) + (cG(B) * 5)) >> 2) & 0xfc) << 5 | ((((cB(A) * 3) + (cB(B) * 5)) >> 3) & 0x1f))
-#define WeightB2_6(A, B)  (((((cR(A) * 2) + (cR(B) * 6)) >> 3) & 0x1f) << 11 | ((((cG(A) * 2) + (cG(B) * 6)) >> 2) & 0xfc) << 5 | ((((cB(A) * 2) + (cB(B) * 6)) >> 3) & 0x1f))
-#define WeightB6_2(A, B)  (((((cR(A) * 6) + (cR(B) * 2)) >> 3) & 0x1f) << 11 | ((((cG(A) * 6) + (cG(B) * 2)) >> 2) & 0xfc) << 5 | ((((cB(A) * 6) + (cB(B) * 2)) >> 3) & 0x1f))
+#define WeightB1_1(A, B)  ((((cR(A) + cR(B)) >> 1) & 0xf8) << 8 | (((cG(A) + cG(B)) >> 1) & 0xfc) << 3 | (((cB(A) + cB(B)) >> 1) & 0xf8) >> 3)
+#define WeightB5_3(A, B)  (((((cR(A) * 5) + (cR(B) * 3)) >> 3) & 0xf8) << 8 | ((((cG(A) * 5) + (cG(B) * 3)) >> 3) & 0xfc) << 3 | ((((cB(A) * 5) + (cB(B) * 3)) >> 3) & 0xf8) >> 3)
+#define WeightB3_5(A, B)  (((((cR(A) * 3) + (cR(B) * 5)) >> 3) & 0xf8) << 8 | ((((cG(A) * 3) + (cG(B) * 5)) >> 3) & 0xfc) << 3 | ((((cB(A) * 3) + (cB(B) * 5)) >> 3) & 0xf8) >> 3)
+#define WeightB2_6(A, B)  (((((cR(A) * 2) + (cR(B) * 6)) >> 3) & 0xf8) << 8 | ((((cG(A) * 2) + (cG(B) * 6)) >> 3) & 0xfc) << 3 | ((((cB(A) * 2) + (cB(B) * 6)) >> 3) & 0xf8) >> 3)
+#define WeightB6_2(A, B)  (((((cR(A) * 6) + (cR(B) * 2)) >> 3) & 0xf8) << 8 | ((((cG(A) * 6) + (cG(B) * 2)) >> 3) & 0xfc) << 3 | ((((cB(A) * 6) + (cB(B) * 2)) >> 3) & 0xf8) >> 3)
  
 void scale_256x384_to_160x240(uint32_t* dst, uint32_t* src)
 {
@@ -142,5 +142,4 @@ void scale_256x384_to_160x240(uint32_t* dst, uint32_t* src)
         }
     }
 }
-
 #endif

@@ -54,15 +54,6 @@
 #define KEY_DEBUG		13
 #define KEY_BOOST		14
 
-/* Keypad key names */
-extern const char *key_names[NB_KEYS];
-/* Current keyboard configuration */
-extern u16 keyboard_cfg[NB_KEYS];
-/* Current joypad configuration */
-extern u16 joypad_cfg[NB_KEYS];
-/* Number of detected joypads */
-extern u16 nbr_joy;
-
 #if defined(SDL_SWIZZLEBGR) || defined(GKD350H)
 extern int_fast16_t emulated_touch_x;
 extern int_fast16_t emulated_touch_y;
@@ -80,19 +71,13 @@ struct mouse_status
 
 extern struct mouse_status mouse;
 
-void set_mouse_coord(signed long x,signed long y);
+void set_mouse_coord(int_fast16_t x, int_fast16_t y);
 #endif // !GTK_UI
 
 BOOL init_joy( void);
 void uninit_joy( void);
-void set_joy_keys(const u16 joyCfg[]);
-void set_kb_keys(const u16 kbCfg[]);
-u16 get_set_joy_key(int index);
-void get_set_joy_axis(int index, int index_opp);
 void update_keypad(u16 keys);
 u16 get_keypad( void);
-u16 lookup_key (u16 keyval);
-u16 lookup_joy_key (u16 keyval);
 int
 process_ctrls_events( u16 *keypad,
                       void (*external_videoResizeFn)( u16 width, u16 height),
