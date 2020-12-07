@@ -20,6 +20,8 @@
 #ifndef TYPES_HPP
 #define TYPES_HPP
 
+#include <stdint.h>
+
 #ifndef FASTCALL
 #ifdef __MINGW32__
 #define FASTCALL __attribute__((fastcall))
@@ -81,6 +83,7 @@ typedef signed long long s64;
 #endif
 
 typedef u8  uint8;
+
 typedef u16 uint16;
 
 #ifndef OBJ_C

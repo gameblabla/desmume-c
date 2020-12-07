@@ -81,9 +81,10 @@ void MatrixMultVec3x3 (float *matrix, float *vecPtr)
 
 void MatrixIdentity	(float *matrix)
 {
-	memset (matrix, 0, sizeof(float)*16);
-
-	matrix[0] = matrix[5] = matrix[10] = matrix[15] = 1.f;
+	matrix[1] = matrix[2] = matrix[3] = matrix[4] = 0;
+	matrix[6] = matrix[7] = matrix[8] = matrix[9] = 0;
+	matrix[11] = matrix[12] = matrix[13] = matrix[14] = 0;
+	matrix[0] = matrix[5] = matrix[10] = matrix[15] = 1<<12;
 }
 
 void MatrixMultiply (float *matrix, float *rightMatrix)
