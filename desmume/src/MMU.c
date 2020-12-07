@@ -32,7 +32,6 @@
 #include "NDSSystem.h"
 #include "cflash.h"
 #include "cp15.h"
-#include "wifi.h"
 #include "registers.h"
 #include "render3D.h"
 
@@ -606,18 +605,6 @@ u8 FASTCALL MMU_read8(u32 proc, u32 adr)
 	if ((adr>=0x9000000)&&(adr<0x9900000))
 		return (unsigned char)cflash_read(adr);
 
-#ifdef EXPERIMENTAL_WIFI
-	/* wifi mac access */
-	if ((proc==ARMCPU_ARM7) && (adr>=0x04800000)&&(adr<0x05000000))
-	{
-		if (adr & 1)
-			return (WIFI_read16(&wifiMac,adr) >> 8) & 0xFF;
-		else
-			return WIFI_read16(&wifiMac,adr) & 0xFF;
-	}
-#endif
-
-
 	// Address is an IO register
 	if ((adr >> 24) == 4)
 	{
@@ -674,12 +661,6 @@ u16 FASTCALL MMU_read16(u32 proc, u32 adr)
 	// CFlash reading, Mic
 	if ((adr>=0x08800000)&&(adr<0x09900000))
 	   return (unsigned short)cflash_read(adr);
-
-#ifdef EXPERIMENTAL_WIFI
-	/* wifi mac access */
-	if ((proc==ARMCPU_ARM7) && (adr>=0x04800000)&&(adr<0x05000000))
-		return WIFI_read16(&wifiMac,adr) ;
-#endif
 
 	adr &= 0x0FFFFFFF;
 
@@ -975,12 +956,13 @@ void FASTCALL MMU_write8(u32 proc, u32 adr, u8 val)
         }
     }
 
-	if ((adr & 0xFF800000) == 0x04800000)
+	
+	/*if ((adr & 0xFF800000) == 0x04800000)
 	{
-		/* is wifi hardware, dont intermix with regular hardware registers */
-		/* FIXME handle 8 bit writes */
+		//is wifi hardware, dont intermix with regular hardware registers
+		//FIXME handle 8 bit writes//
 		return ;
-	}
+	}*/
 
 	switch(adr)
 	{
@@ -1351,18 +1333,9 @@ void FASTCALL MMU_write16(u32 proc, u32 adr, u16 val)
 		return;
 	}
 
-#ifdef EXPERIMENTAL_WIFI
-
 	/* wifi mac access */
-	if ((proc==ARMCPU_ARM7) && (adr>=0x04800000)&&(adr<0x05000000))
-	{
-		WIFI_write16(&wifiMac,adr,val) ;
-		return ;
-	}
-#else
-	if ((proc==ARMCPU_ARM7) && (adr>=0x04800000)&&(adr<0x05000000))
-		return ;
-#endif
+	/*if ((proc==ARMCPU_ARM7) && (adr>=0x04800000)&&(adr<0x05000000))
+		return ;*/
 
 	adr &= 0x0FFFFFFF;
 

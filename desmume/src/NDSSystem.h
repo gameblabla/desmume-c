@@ -29,7 +29,6 @@
 #include "SPU.h"
 
 #include "mem.h"
-#include "wifi.h"
 
 #ifdef __cplusplus
 extern "C" {
