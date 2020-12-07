@@ -724,7 +724,6 @@ static INLINE void renderline_textBG(const GPU * gpu, u8 num, u8 * dst, u32 Y, u
 	u16 yoff;
 	u16 x      = 0;
 	u16 xfin;
-	u16 palette_size;
 	u16 mosaic = T1ReadWord((u8 *)&gpu->dispx_st->dispx_MISC.MOSAIC, 0);
 
 	s8 line_dir = 1;
@@ -873,10 +872,8 @@ static INLINE void renderline_textBG(const GPU * gpu, u8 num, u8 * dst, u32 Y, u
 		return;
 	}
 
-	palette_size=0; /* color: no extended palette */
 	if(dispCnt->ExBGxPalette_Enable)  /* color: extended palette */
 	{
-		palette_size=0x100;
 		pal = ARM9Mem.ExtPal[gpu->core][gpu->BGExtPalSlot[num]];
 		if(!pal) return;
 	}
@@ -902,7 +899,10 @@ static INLINE void renderline_textBG(const GPU * gpu, u8 num, u8 * dst, u32 Y, u
 		}
 		for(; x < xfin; )
 		{
-			color = T1ReadWord(pal, ((*line) + (tileentry.bits.Palette*palette_size)) << 1);
+			if(dispCnt->ExBGxPalette_Enable)
+				color = T1ReadWord(pal, ((*line) + (tileentry.bits.Palette<<8)) << 1);
+			else
+				color = T1ReadWord(pal, (*line) << 1);
 			if (*line) 
 				gpu->setFinalColorBck(gpu,0,num,dst,color,x,Y);
 			dst += 2; x++; xoff++;
