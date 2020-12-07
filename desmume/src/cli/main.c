@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <libgen.h>
-
+#include <sys/time.h>
 #ifndef SDL_TRIPLEBUF
 #define SDL_TRIPLEBUF SDL_DOUBLEBUF
 #endif
@@ -92,6 +92,26 @@ static void Draw( void)
 	return;
 }
 
+#ifdef FRAMESKIP
+static uint32_t Timer_Read(void) 
+{
+	/* Timing. */
+	struct timeval tval;
+  	gettimeofday(&tval, 0);
+	return (((tval.tv_sec*1000000) + (tval.tv_usec)));
+}
+static long lastTick = 0, newTick;
+static uint32_t SkipCnt = 0, FPS = 60, FrameSkip, video_frames = 0;
+static const uint32_t TblSkip[5][5] = {
+    {0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 1},
+    {0, 0, 0, 1, 1},
+    {0, 0, 1, 1, 1},
+    {0, 1, 1, 1, 1},
+};
+#endif
+
+
 
 int main(int argc, char ** argv) {
 	static unsigned short keypad = 0;
@@ -128,7 +148,7 @@ int main(int argc, char ** argv) {
 	
 	execute = TRUE;
 
-	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) == -1)
+	if(SDL_Init(SDL_INIT_VIDEO) == -1)
     {
       fprintf(stderr, "Error trying to initialize SDL: %s\n",
               SDL_GetError());
@@ -167,10 +187,36 @@ int main(int argc, char ** argv) {
 		}
 
 		update_keypad(keypad);     /* Update keypad */
-		last_cycle = NDS_exec((560190 << 1) - last_cycle, FALSE);
+		
+#ifdef FRAMESKIP
+		SkipCnt++;
+		if (SkipCnt > 4) SkipCnt = 0;
+		last_cycle = NDS_exec((560190 << 1) - last_cycle, FALSE, TblSkip[FrameSkip][SkipCnt]);
+#else
+		last_cycle = NDS_exec((560190 << 1) - last_cycle, FALSE, 0);
+#endif
 		SPU_Emulate();
 		Draw();
 		
+#ifdef FRAMESKIP
+	newTick = Timer_Read();
+	if ( (newTick) - (lastTick) > 1000000) 
+	{
+		FPS = video_frames;
+		video_frames = 0;
+		lastTick = newTick;
+		
+		FrameSkip = 4;
+		if (FPS >= 60)
+		{
+			FrameSkip = 0;
+		}
+		else if (FPS >= 45)
+		{
+			FrameSkip = 3;
+		}
+	}
+#endif
 
 #ifdef DISPLAY_FPS
 		fps_frame_counter += 1;

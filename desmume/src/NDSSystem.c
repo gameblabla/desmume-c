@@ -897,7 +897,7 @@ int NDS_LoadFirmware(const char *filename)
 
 #define INDEX(i) ((((i)>>16)&0xFF0)|(((i)>>4)&0xF))
 u32
-NDS_exec(s32 nb, BOOL force)
+NDS_exec(s32 nb, BOOL force, uint_fast8_t framekip)
 {
 	int i, j;
 
@@ -981,8 +981,11 @@ NDS_exec(s32 nb, BOOL force)
 
               if(nds.VCount<192)
                 {
-                  GPU_ligne(&MainScreen, nds.VCount);
-                  GPU_ligne(&SubScreen, nds.VCount);
+					if (!framekip)
+					{
+						GPU_ligne(&MainScreen, nds.VCount);
+						GPU_ligne(&SubScreen, nds.VCount);
+					}
 				
                   if(MMU.DMAStartTime[0][0] == 2)
                     MMU_doDMA(0, 0);
