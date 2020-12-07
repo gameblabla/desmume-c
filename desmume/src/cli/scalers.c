@@ -1,4 +1,4 @@
-#ifndef GKD350H
+#ifdef GKD350H
 
 #include <stdint.h>
 #include <stdlib.h>
