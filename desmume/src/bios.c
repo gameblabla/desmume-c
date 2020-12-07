@@ -20,6 +20,8 @@
 */
 
 #include "cp15.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include "MMU.h"
 #include "SPU.h"
