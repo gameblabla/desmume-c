@@ -167,7 +167,7 @@ int main(int argc, char ** argv) {
 	sdl_screen = SDL_CreateRGBSurface(SDL_HWSURFACE, 256, 384, 16, 0x001F, 0x03E0, 0x7C00, 0);
 #else
 #ifdef SDL_SWIZZLEBGR
-	sdl_screen = SDL_SetVideoMode(256, 384, 16, SDL_HWSURFACE | SDL_TRIPLEBUF | SDL_SWIZZLEBGR);
+	sdl_screen = SDL_SetVideoMode(256, 384, 15, SDL_HWSURFACE | SDL_TRIPLEBUF | SDL_SWIZZLEBGR);
 #else
 	rl_screen = SDL_SetVideoMode(256, 384, 16, SDL_HWSURFACE | SDL_TRIPLEBUF);
 	sdl_screen = SDL_CreateRGBSurface(SDL_HWSURFACE, 256, 384, 16, 0x001F, 0x03E0, 0x7C00, 0);
