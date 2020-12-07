@@ -810,7 +810,7 @@ void SetupFinalPixelBlitter (GPU *gpu);
 #define GPU_setBLDCNT(gpu, val) {gpu->BLDCNT = val; SetupFinalPixelBlitter (gpu);}
 
 #define GPU_setBLDALPHA(gpu, val) {gpu->BLDALPHA_EVA = (val&0x1f) > 16 ? 16 : (val&0x1f);\
-									gpu->BLDALPHA_EVB = ((val>>8)&0x1f) > 16 ? 16 : ((val>>8)&0x1f)}
+									gpu->BLDALPHA_EVB = ((val>>8)&0x1f) > 16 ? 16 : ((val>>8)&0x1f);}
 #define GPU_setBLDALPHA_EVA(gpu, val) {gpu->BLDALPHA_EVA = (val&0x1f) > 16 ? 16 : (val&0x1f);}
 #define GPU_setBLDALPHA_EVB(gpu, val) {gpu->BLDALPHA_EVB = (val&0x1f) > 16 ? 16 : (val&0x1f);}
 
