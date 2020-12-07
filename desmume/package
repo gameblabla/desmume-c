@@ -2,6 +2,7 @@
 
 mkdir -p opk
 cp ./desmume.elf opk/desmume.elf
+cp ./cursor.bmp opk/cursor.bmp
 cp ./icon.png opk/icon.png
 cp ./COPYING opk/COPYING
 
