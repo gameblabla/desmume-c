@@ -991,11 +991,11 @@ void FASTCALL MMU_write8(u32 proc, u32 adr, u8 val)
 	{
 		case REG_DISPx_VCOUNT:
 			if(proc == ARMCPU_ARM9)
-				return nds.VCount & 0xFF;
+				return;
 		break;
 		case REG_DISPx_VCOUNT+1:
 			if(proc == ARMCPU_ARM9)
-				return (nds.VCount>>8) & 0xFF;
+				return;
 		break;
 		case REG_DISPA_WIN0H: 	 
 			if(proc == ARMCPU_ARM9) GPU_setWIN0_H1(MainScreen.gpu, val);
@@ -1397,7 +1397,7 @@ void FASTCALL MMU_write16(u32 proc, u32 adr, u16 val)
 				break;
 			case REG_DISPA_VCOUNT:
 				if(proc == ARMCPU_ARM9)
-					return nds.VCount;
+					return;
 			break;
 			case 0x0400035C:
 			{
@@ -2066,7 +2066,8 @@ void FASTCALL MMU_write32(u32 proc, u32 adr, u32 val)
 			case REG_DISPA_DISPSTAT:
 				break;
 
-			case REG_DISPx_VCOUNT: return nds.VCount;
+			case REG_DISPx_VCOUNT:
+			break;
 			// Alpha test reference value - Parameters:1
 			case 0x04000340:
 			{
