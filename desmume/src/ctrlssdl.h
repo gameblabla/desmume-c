@@ -63,6 +63,12 @@ extern u16 joypad_cfg[NB_KEYS];
 /* Number of detected joypads */
 extern u16 nbr_joy;
 
+#if defined(SDL_SWIZZLEBGR) || defined(GKD350H)
+extern int_fast16_t emulated_touch_x;
+extern int_fast16_t emulated_touch_y;
+extern uint_fast8_t mouse_mode;
+#endif
+
 #ifndef GTK_UI
 struct mouse_status
 {
@@ -77,7 +83,6 @@ extern struct mouse_status mouse;
 void set_mouse_coord(signed long x,signed long y);
 #endif // !GTK_UI
 
-void load_default_config( void);
 BOOL init_joy( void);
 void uninit_joy( void);
 void set_joy_keys(const u16 joyCfg[]);

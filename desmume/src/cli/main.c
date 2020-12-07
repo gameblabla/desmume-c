@@ -28,14 +28,6 @@
 #define SDL_TRIPLEBUF SDL_DOUBLEBUF
 #endif
 
-#ifndef VERSION
-#define VERSION "Unknown version"
-#endif
-
-#ifndef CLI_UI
-#define CLI_UI
-#endif
-
 #include "../MMU.h"
 #include "../NDSSystem.h"
 #include "../cflash.h"
@@ -51,9 +43,8 @@ uint_fast8_t sdl_quit = 0;
 volatile BOOL execute = FALSE;
 static float nds_screen_size_ratio = 1.0f;
 SDL_Surface * sdl_screen;
-#ifndef SDL_SWIZZLEBGR
 SDL_Surface *rl_screen;
-#endif
+SDL_Surface *cursor_sdl;
 
 SoundInterface_struct *SNDCoreList[] = {
   &SNDDummy,
@@ -67,25 +58,6 @@ GPU3DInterface *core3DList[] = {
 &gpu3DNull
 };
 #endif
-
-/* Our keyboard config is different because of the directional keys */
-const u16 cli_kb_cfg[NB_KEYS] =
-  { SDLK_LCTRL,         // A
-    SDLK_LALT,         // B
-    SDLK_ESCAPE, // select
-    SDLK_RETURN,    // start
-    SDLK_RIGHT,     // Right
-    SDLK_LEFT,      // Left
-    SDLK_UP,        // Up
-    SDLK_DOWN,      // Down
-    SDLK_BACKSPACE,         // R
-    SDLK_TAB,         // L
-    SDLK_LSHIFT,         // X
-    SDLK_SPACE,         // Y
-    SDLK_p,         // DEBUG
-    SDLK_o          // BOOST
-  };
-
 
 #ifdef FRAMESKIP
 static uint32_t Timer_Read(void) 
@@ -109,19 +81,27 @@ static const uint32_t TblSkip[5][5] = {
 static void Draw( void)
 {
 #ifdef GKD350H
+	SDL_Rect rct;
+	rct.x = emulated_touch_x;
+	rct.y = emulated_touch_y;
 #ifdef FRAMESKIP
 	if (!TblSkip[FrameSkip][SkipCnt])
 #endif
 	{
 		scale_256x384_to_160x240((uint32_t* restrict)rl_screen->pixels, (uint32_t* restrict)sdl_screen->pixels);
+		if (mouse_mode) SDL_BlitSurface(cursor_sdl, NULL, rl_screen, &rct);
 		SDL_Flip(rl_screen);
 	}
 #else
 #ifdef SDL_SWIZZLEBGR
+	SDL_Rect rct;
+	rct.x = emulated_touch_x;
+	rct.y = emulated_touch_y;
 #ifdef FRAMESKIP
 	if (!TblSkip[FrameSkip][SkipCnt])
 #endif
 	{
+		if (mouse_mode) SDL_BlitSurface(cursor_sdl, NULL, rl_screen, &rct);
 		SDL_Flip(sdl_screen);
 	}
 #else
@@ -130,6 +110,24 @@ static void Draw( void)
 #endif
 #endif
 	return;
+}
+
+static void Cleanup_emu(void)
+{
+#if defined(SDL_SWIZZLEBGR) || !defined(GKD350H)
+	if (sdl_screen) SDL_FreeSurface(sdl_screen);
+#else
+	if (rl_screen) SDL_FreeSurface(rl_screen);
+	if (sdl_screen) SDL_FreeSurface(sdl_screen);
+#endif
+
+ #if defined(GKD350H) || defined(SDL_SWIZZLEBGR)
+	if (cursor_sdl) SDL_FreeSurface(cursor_sdl);
+#endif
+	/* Unload joystick */
+	uninit_joy();
+	SDL_Quit();
+	NDS_DeInit();
 }
 
 int main(int argc, char ** argv) {
@@ -143,6 +141,38 @@ int main(int argc, char ** argv) {
 	u32 fps_temp_time;
 	#define NUM_FRAMES_TO_TIME 60
 #endif
+
+	if(SDL_Init(SDL_INIT_VIDEO) == -1)
+    {
+		fprintf(stderr, "Error trying to initialize SDL: %s\n", SDL_GetError());
+		return 1;
+    }
+#if defined(GKD350H)
+	SDL_ShowCursor(0);
+	rl_screen = SDL_SetVideoMode(320, 240, 16, SDL_HWSURFACE | SDL_TRIPLEBUF);
+	sdl_screen = SDL_CreateRGBSurface(SDL_HWSURFACE, 256, 384, 16, 0x001F, 0x03E0, 0x7C00, 0);
+#else
+#ifdef SDL_SWIZZLEBGR
+	SDL_ShowCursor(0);
+	sdl_screen = SDL_SetVideoMode(256, 384, 15, SDL_HWSURFACE | SDL_TRIPLEBUF | SDL_SWIZZLEBGR);
+#else
+	rl_screen = SDL_SetVideoMode(256, 384, 16, SDL_HWSURFACE | SDL_TRIPLEBUF);
+	sdl_screen = SDL_CreateRGBSurface(SDL_HWSURFACE, 256, 384, 16, 0x001F, 0x03E0, 0x7C00, 0);
+#endif
+#endif
+
+	if (!sdl_screen)
+	{
+		fprintf( stderr, "Video mode set failed: %s\n", SDL_GetError( ) );
+		return 1;
+    }
+    
+    #if defined(GKD350H) || defined(SDL_SWIZZLEBGR)
+    SDL_Surface* tmp = SDL_LoadBMP("cursor.bmp");
+    SDL_SetColorKey(tmp, (SDL_SRCCOLORKEY | SDL_RLEACCEL), SDL_MapRGB(tmp->format, 255, 0, 0));
+	cursor_sdl = SDL_DisplayFormat(tmp);
+	SDL_FreeSurface(tmp);
+	#endif
 
 	/* the firmware settings */
 	struct NDS_fw_config_data fw_config;
@@ -159,43 +189,17 @@ int main(int argc, char ** argv) {
 
 	SPU_ChangeSoundCore(SNDCORE_SDL, 735 * 4);
 
-	if (NDS_LoadROM(argv[1], MC_TYPE_AUTODETECT, 1, 0) < 0) {
+	if (NDS_LoadROM(argv[1], MC_TYPE_AUTODETECT, 1, 0) < 0)
+	{
+		Cleanup_emu();
 		fprintf(stderr, "error while loading %s\n", argv[1]);
-		exit(-1);
+		return 1;
 	}
 	
 	execute = TRUE;
 
-	if(SDL_Init(SDL_INIT_VIDEO) == -1)
-    {
-      fprintf(stderr, "Error trying to initialize SDL: %s\n",
-              SDL_GetError());
-      return 1;
-    }
-    SDL_ShowCursor(0);
-#if defined(GKD350H)
-	rl_screen = SDL_SetVideoMode(320, 240, 16, SDL_HWSURFACE | SDL_TRIPLEBUF);
-	sdl_screen = SDL_CreateRGBSurface(SDL_HWSURFACE, 256, 384, 16, 0x001F, 0x03E0, 0x7C00, 0);
-#else
-#ifdef SDL_SWIZZLEBGR
-	sdl_screen = SDL_SetVideoMode(256, 384, 15, SDL_HWSURFACE | SDL_TRIPLEBUF | SDL_SWIZZLEBGR);
-#else
-	rl_screen = SDL_SetVideoMode(256, 384, 16, SDL_HWSURFACE | SDL_TRIPLEBUF);
-	sdl_screen = SDL_CreateRGBSurface(SDL_HWSURFACE, 256, 384, 16, 0x001F, 0x03E0, 0x7C00, 0);
-#endif
-#endif
-
-    if ( !sdl_screen ) {
-      fprintf( stderr, "Video mode set failed: %s\n", SDL_GetError( ) );
-      exit( -1);
-    }
-    
-	SDL_WM_SetCaption("Desmume SDL", NULL);
-
 	/* Initialize joysticks */
 	if(!init_joy()) return 1;
-	/* Load our own keyboard configuration */
-	set_kb_keys(cli_kb_cfg);
 
 	while(!sdl_quit)
 	{
@@ -242,8 +246,6 @@ int main(int argc, char ** argv) {
 	}
 
 	/* Unload joystick */
-	uninit_joy();
-	SDL_Quit();
-	NDS_DeInit();
+	Cleanup_emu();
 	return 0;
 }

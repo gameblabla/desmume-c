@@ -115,10 +115,9 @@ int SNDSDLInit(int buffersize)
 
 void SNDSDLDeInit()
 {
-   SDL_CloseAudio();
-
-   if (stereodata16)
-      free(stereodata16);
+	SDL_PauseAudio(1);
+	SDL_CloseAudio();
+	if (stereodata16) free(stereodata16);
 }
 
 //////////////////////////////////////////////////////////////////////////////
