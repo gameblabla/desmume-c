@@ -617,6 +617,40 @@ u8 FASTCALL MMU_read8(u32 proc, u32 adr)
 	}
 #endif
 
+
+	// Address is an IO register
+	if ((adr >> 24) == 4)
+	{
+		switch(adr)
+		{
+			case REG_DISPA_DISPSTAT:
+				break;
+			case REG_DISPA_DISPSTAT+1:
+				break;
+			//sqrtcnt isnt big enough for these to exist. but they'd probably return 0 so its ok
+			case REG_SQRTCNT+2: return 0;
+			case REG_SQRTCNT+3: return 0;
+
+			//these aren't readable
+			case REG_DISPA_BG0HOFS: case REG_DISPA_BG0HOFS+1:
+			case REG_DISPA_BG1HOFS: case REG_DISPA_BG1HOFS+1:
+			case REG_DISPA_BG2HOFS: case REG_DISPA_BG2HOFS+1:
+			case REG_DISPA_BG3HOFS: case REG_DISPA_BG3HOFS+1:
+			case REG_DISPB_BG0HOFS: case REG_DISPB_BG0HOFS+1:
+			case REG_DISPB_BG1HOFS: case REG_DISPB_BG1HOFS+1:
+			case REG_DISPB_BG2HOFS: case REG_DISPB_BG2HOFS+1:
+			case REG_DISPB_BG3HOFS: case REG_DISPB_BG3HOFS+1:
+			case REG_DISPA_BG0VOFS: case REG_DISPA_BG0VOFS+1:
+			case REG_DISPA_BG1VOFS: case REG_DISPA_BG1VOFS+1:
+			case REG_DISPA_BG2VOFS: case REG_DISPA_BG2VOFS+1:
+			case REG_DISPA_BG3VOFS: case REG_DISPA_BG3VOFS+1:
+			case REG_DISPB_BG0VOFS: case REG_DISPB_BG0VOFS+1:
+			case REG_DISPB_BG1VOFS: case REG_DISPB_BG1VOFS+1:
+			case REG_DISPB_BG2VOFS: case REG_DISPB_BG2VOFS+1:
+			case REG_DISPB_BG3VOFS: case REG_DISPB_BG3VOFS+1:
+				return 0;
+		}
+	}
     return MMU.MMU_MEM[proc][(adr>>20)&0xFF][adr&MMU.MMU_MASK[proc][(adr>>20)&0xFF]];
 }
 
@@ -676,6 +710,14 @@ u16 FASTCALL MMU_read16(u32 proc, u32 adr)
 				return (u16)MMU.reg_IF[proc];
 			case REG_IF + 2 :
 				return (u16)(MMU.reg_IF[proc]>>16);
+				
+			//these aren't readable
+			case REG_DISPA_BG0HOFS: case REG_DISPA_BG1HOFS: case REG_DISPA_BG2HOFS: case REG_DISPA_BG3HOFS:
+			case REG_DISPB_BG0HOFS: case REG_DISPB_BG1HOFS: case REG_DISPB_BG2HOFS: case REG_DISPB_BG3HOFS:
+			case REG_DISPA_BG0VOFS: case REG_DISPA_BG1VOFS: case REG_DISPA_BG2VOFS: case REG_DISPA_BG3VOFS:
+			case REG_DISPB_BG0VOFS: case REG_DISPB_BG1VOFS: case REG_DISPB_BG2VOFS: case REG_DISPB_BG3VOFS:
+				return 0;
+
 				
 			case REG_TM0CNTL :
 			case REG_TM1CNTL :
@@ -821,6 +863,12 @@ u32 FASTCALL MMU_read32(u32 proc, u32 adr)
 				//LOG("point res\r\n");
 			return 0;
 			*/
+			//these aren't readable.
+			//note: ratatouille stage 3 begins testing this.. it will write a 256, then read it, and if it reads back a 256, the 3d display will be scrolled invisibly. it needs to read a 0 to cause an unscrolled 3d display.
+			case REG_DISPA_BG0HOFS: case REG_DISPA_BG1HOFS: case REG_DISPA_BG2HOFS: case REG_DISPA_BG3HOFS:
+			case REG_DISPB_BG0HOFS: case REG_DISPB_BG1HOFS: case REG_DISPB_BG2HOFS: case REG_DISPB_BG3HOFS:
+				return 0;
+			
             case REG_GCDATAIN:
 			{
                     u32 val=0;
