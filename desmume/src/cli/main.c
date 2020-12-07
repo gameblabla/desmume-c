@@ -42,6 +42,9 @@
 #include "../sndsdl.h"
 #include "../ctrlssdl.h"
 #include "../render3D.h"
+#ifdef GKD350H
+#include "scalers.h"
+#endif
 //#include "../opengl_collector_3Demu.h"
 
 uint_fast8_t sdl_quit = 0;
@@ -83,12 +86,16 @@ const u16 cli_kb_cfg[NB_KEYS] =
 
 static void Draw( void)
 {
-
+#ifdef GKD350H
+	scale_256x384_to_160x240((uint32_t* restrict)rl_screen->pixels, (uint32_t* restrict)sdl_screen->pixels);
+	SDL_Flip(rl_screen);
+#else
 #ifdef SDL_SWIZZLEBGR
 	SDL_Flip(sdl_screen);
 #else
 	SDL_BlitSurface(sdl_screen, NULL, rl_screen, NULL);
 	SDL_Flip(rl_screen);
+#endif
 #endif
 	return;
 }
@@ -154,12 +161,16 @@ int main(int argc, char ** argv) {
               SDL_GetError());
       return 1;
     }
-
+#if defined(GKD350H)
+	rl_screen = SDL_SetVideoMode(320, 240, 16, SDL_HWSURFACE | SDL_TRIPLEBUF);
+	sdl_screen = SDL_CreateRGBSurface(SDL_HWSURFACE, 256, 384, 16, 0x001F, 0x03E0, 0x7C00, 0);
+#else
 #ifdef SDL_SWIZZLEBGR
 	sdl_screen = SDL_SetVideoMode(256, 384, 16, SDL_HWSURFACE | SDL_TRIPLEBUF | SDL_SWIZZLEBGR);
 #else
 	rl_screen = SDL_SetVideoMode(256, 384, 16, SDL_HWSURFACE | SDL_TRIPLEBUF);
 	sdl_screen = SDL_CreateRGBSurface(SDL_HWSURFACE, 256, 384, 16, 0x001F, 0x03E0, 0x7C00, 0);
+#endif
 #endif
 
     if ( !sdl_screen ) {
