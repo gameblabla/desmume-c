@@ -1164,13 +1164,7 @@ INLINE void render_sprite_256 (	GPU * gpu, u16 l, u8 * dst, u8 * src, u16 * pal,
 {
 	int i; 
 	u8 palette_entry; 
-	u16 color, oldBLDCNT;
-
-	if (alpha)
-	{
-		oldBLDCNT = gpu->BLDCNT;
-		gpu->BLDCNT = gpu->BLDCNT | 0x10;
-	}
+	u16 color;
 
 	for(i = 0; i < lg; i++, ++sprX, x+=xdir)
 	{
@@ -1185,11 +1179,6 @@ INLINE void render_sprite_256 (	GPU * gpu, u16 l, u8 * dst, u8 * src, u16 * pal,
 				prioTab[sprX] = prio;
 		}
 	}
-
-	if (alpha)
-	{
-		gpu->BLDCNT = oldBLDCNT;
-	}
 }
 
 INLINE void render_sprite_16 (	GPU * gpu, u16 l, u8 * dst, u8 * src, u16 * pal, 
@@ -1197,13 +1186,7 @@ INLINE void render_sprite_16 (	GPU * gpu, u16 l, u8 * dst, u8 * src, u16 * pal,
 {
 	int i; 
 	u8 palette, palette_entry;
-	u16 color, oldBLDCNT, x1;
-
-	if (alpha)
-	{
-		oldBLDCNT = gpu->BLDCNT;
-		gpu->BLDCNT = gpu->BLDCNT | 0x10;
-	}
+	u16 x1, color;
 
 	for(i = 0; i < lg; i++, ++sprX, x+=xdir)
 	{
@@ -1220,11 +1203,6 @@ INLINE void render_sprite_16 (	GPU * gpu, u16 l, u8 * dst, u8 * src, u16 * pal,
 			if (gpu->setFinalColorSpr(gpu, sprX << 1,4,dst, color, sprX ,l))
 				prioTab[sprX] = prio;
 		}
-	}
-
-	if (alpha)
-	{
-		gpu->BLDCNT = oldBLDCNT;
 	}
 }
 
