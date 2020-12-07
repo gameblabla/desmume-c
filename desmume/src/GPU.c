@@ -2072,16 +2072,17 @@ void GPU_ligne(NDS_Screen * screen, u16 l)
 				i16 = item->BGs[i];
 				if (gpu->LayersEnable[i16])
 				{
-					#ifdef _3DRENDERING
+					
 					if (gpu->core == GPU_MAIN)
 					{
 						if (i16 == 0 && dispCnt->BG0_3D)
 						{
+							#ifdef _3DRENDERING
 							gpu3D->NDS_3D_GetLine (l, (u16*)dst);
+							#endif
 							continue;
 						}
 					}
-					#endif
 					modeRender[dispCnt->BG_Mode][i16](gpu, i16, l, dst);
 				}
 			}
