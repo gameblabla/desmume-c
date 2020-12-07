@@ -70,7 +70,7 @@ GPU3DInterface *core3DList[] = {
 const u16 cli_kb_cfg[NB_KEYS] =
   { SDLK_LCTRL,         // A
     SDLK_LALT,         // B
-    SDLK_BACKSPACE, // select
+    SDLK_ESCAPE, // select
     SDLK_RETURN,    // start
     SDLK_RIGHT,     // Right
     SDLK_LEFT,      // Left
