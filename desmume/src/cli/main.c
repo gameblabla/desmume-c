@@ -50,7 +50,10 @@
 uint_fast8_t sdl_quit = 0;
 volatile BOOL execute = FALSE;
 static float nds_screen_size_ratio = 1.0f;
-SDL_Surface * sdl_screen, *rl_screen;
+SDL_Surface * sdl_screen;
+#ifndef SDL_SWIZZLEBGR
+SDL_Surface *rl_screen;
+#endif
 
 SoundInterface_struct *SNDCoreList[] = {
   &SNDDummy,
@@ -84,22 +87,6 @@ const u16 cli_kb_cfg[NB_KEYS] =
   };
 
 
-static void Draw( void)
-{
-#ifdef GKD350H
-	scale_256x384_to_160x240((uint32_t* restrict)rl_screen->pixels, (uint32_t* restrict)sdl_screen->pixels);
-	SDL_Flip(rl_screen);
-#else
-#ifdef SDL_SWIZZLEBGR
-	SDL_Flip(sdl_screen);
-#else
-	SDL_BlitSurface(sdl_screen, NULL, rl_screen, NULL);
-	SDL_Flip(rl_screen);
-#endif
-#endif
-	return;
-}
-
 #ifdef FRAMESKIP
 static uint32_t Timer_Read(void) 
 {
@@ -109,7 +96,7 @@ static uint32_t Timer_Read(void)
 	return (((tval.tv_sec*1000000) + (tval.tv_usec)));
 }
 static long lastTick = 0, newTick;
-static uint32_t SkipCnt = 0, FPS = 60, FrameSkip, video_frames = 0;
+static uint32_t SkipCnt = 0, FPS = 60, FrameSkip = 4, video_frames = 0;
 static const uint32_t TblSkip[5][5] = {
     {0, 0, 0, 0, 0},
     {0, 0, 0, 0, 1},
@@ -119,7 +106,26 @@ static const uint32_t TblSkip[5][5] = {
 };
 #endif
 
-
+static void Draw( void)
+{
+#ifdef GKD350H
+	scale_256x384_to_160x240((uint32_t* restrict)rl_screen->pixels, (uint32_t* restrict)sdl_screen->pixels);
+	SDL_Flip(rl_screen);
+#else
+#ifdef SDL_SWIZZLEBGR
+#ifdef FRAMESKIP
+	if (!TblSkip[FrameSkip][SkipCnt])
+#endif
+	{
+		SDL_Flip(sdl_screen);
+	}
+#else
+	SDL_BlitSurface(sdl_screen, NULL, rl_screen, NULL);
+	SDL_Flip(rl_screen);
+#endif
+#endif
+	return;
+}
 
 int main(int argc, char ** argv) {
 	static unsigned short keypad = 0;
@@ -205,30 +211,10 @@ int main(int argc, char ** argv) {
 		if (SkipCnt > 4) SkipCnt = 0;
 		last_cycle = NDS_exec((560190 << 1) - last_cycle, FALSE, TblSkip[FrameSkip][SkipCnt]);
 #else
-		last_cycle = NDS_exec((560190 << 1) - last_cycle, FALSE, 0);
+		last_cycle = NDS_exec((560190 << 1) - last_cycle, FALSE);
 #endif
 		SPU_Emulate();
 		Draw();
-		
-#ifdef FRAMESKIP
-	newTick = Timer_Read();
-	if ( (newTick) - (lastTick) > 1000000) 
-	{
-		FPS = video_frames;
-		video_frames = 0;
-		lastTick = newTick;
-		
-		FrameSkip = 4;
-		if (FPS >= 60)
-		{
-			FrameSkip = 0;
-		}
-		else if (FPS >= 45)
-		{
-			FrameSkip = 3;
-		}
-	}
-#endif
 
 #ifdef DISPLAY_FPS
 		fps_frame_counter += 1;

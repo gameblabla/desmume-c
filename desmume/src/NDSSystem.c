@@ -904,9 +904,13 @@ int NDS_LoadFirmware(const char *filename)
 
 #define INDEX(i) ((((i)>>16)&0xFF0)|(((i)>>4)&0xF))
 u32
-NDS_exec(s32 nb, BOOL force, uint_fast8_t framekip)
+NDS_exec(s32 nb, BOOL force
+#ifdef FRAMESKIP
+, uint_fast8_t framekip
+#endif
+)
 {
-	int i, j;
+	uint_fast16_t i, j;
 
   nb += nds.cycles;//(nds.cycles>>26)<<26;
             
@@ -988,7 +992,9 @@ NDS_exec(s32 nb, BOOL force, uint_fast8_t framekip)
 
               if(nds.VCount<192)
                 {
+#ifdef FRAMESKIP
 					if (!framekip)
+#endif
 					{
 						GPU_ligne(&MainScreen, nds.VCount);
 						GPU_ligne(&SubScreen, nds.VCount);
