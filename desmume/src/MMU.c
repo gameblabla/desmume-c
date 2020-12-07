@@ -203,14 +203,14 @@ void MMU_Init(void) {
 	memset(&MMU.gfxfifo, 0, sizeof(GFXFIFO));
 	MMU.gfxfifo.empty=MMU.gfxfifo.half=TRUE;
 	
-        mc_init(&MMU.fw, MC_TYPE_FLASH);  /* init fw device */
-        mc_alloc(&MMU.fw, NDS_FW_SIZE_V1);
-        MMU.fw.fp = NULL;
-
-        // Init Backup Memory device, this should really be done when the rom is loaded
-        mc_init(&MMU.bupmem, MC_TYPE_AUTODETECT);
-        mc_alloc(&MMU.bupmem, 1);
-        MMU.bupmem.fp = NULL;
+	mc_init(&MMU.fw, MC_TYPE_FLASH);  /* init fw device */
+	mc_alloc(&MMU.fw, NDS_FW_SIZE_V1);
+	MMU.fw.fp = NULL;
+	
+	// Init Backup Memory device, this should really be done when the rom is loaded
+	mc_init(&MMU.bupmem, MC_TYPE_AUTODETECT);
+	mc_alloc(&MMU.bupmem, 1);
+	MMU.bupmem.fp = NULL;
 
 } 
 
