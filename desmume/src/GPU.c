@@ -838,12 +838,15 @@ static INLINE void renderline_textBG(const GPU * gpu, u8 num, u8 * dst, u32 Y, u
 						}
 						dst += 2; x++; xoff++;
 						
-						if (currLine&0xF) 
+						if(x<xfin)
 						{
-							color = T1ReadWord(pal, ((currLine&0xF) + tilePalette) << 1);
-							gpu->setFinalColorBck(gpu,0,num,dst,color,x,Y);
+							if (currLine&0xF) 
+							{
+								color = T1ReadWord(pal, ((currLine&0xF) + tilePalette) << 1);
+								gpu->setFinalColorBck(gpu,0,num,dst,color,x,Y);
+							}
+							dst += 2; x++; xoff++;
 						}
-						dst += 2; x++; xoff++;
 					}
 				} else {
 					line += ((xoff&7)>>1);
@@ -858,13 +861,15 @@ static INLINE void renderline_textBG(const GPU * gpu, u8 num, u8 * dst, u32 Y, u
 						}
 
 						dst += 2; x++; xoff++;
-
-						if (currLine>>4) 
+						if(x<xfin)
 						{
-							color = T1ReadWord(pal, ((currLine>>4) + tilePalette) << 1);
-							gpu->setFinalColorBck(gpu,0,num,dst,color,x,Y);
+							if (currLine>>4) 
+							{
+								color = T1ReadWord(pal, ((currLine>>4) + tilePalette) << 1);
+								gpu->setFinalColorBck(gpu,0,num,dst,color,x,Y);
+							}
+							dst += 2; x++; xoff++;
 						}
-						dst += 2; x++; xoff++;
 					}
 				}
 			}
