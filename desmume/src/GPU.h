@@ -136,6 +136,8 @@ struct _BGxCNT
 /* 7*/ u8 Palette_256:1;         // 0=16x16, 1=1*256 palette
 #ifdef ENABLE_MOSAIC
 /* 6*/ u8 Mosaic_Enable:1;       // 0=disable, 1=Enable mosaic
+#else
+/* 6*/ u8 Mosaic_Enable:0;       // 0=disable, 1=Enable mosaic
 #endif
 /* 2*/ u8 CharacBase_Block:4;    // individual character base offset (n*16KB)
 /* 0*/ u8 Priority:2;            // 0..3=high..low
@@ -156,6 +158,8 @@ struct _BGxCNT
 /* 2*/ u8 CharacBase_Block:4;    // individual character base offset (n*16KB)
 #ifdef ENABLE_MOSAIC
 /* 6*/ u8 Mosaic_Enable:1;       // 0=disable, 1=Enable mosaic
+#else
+/* 6*/ u8 Mosaic_Enable:0;       // 0=disable, 1=Enable mosaic
 #endif
 /* 7*/ u8 Palette_256:1;         // 0=16x16, 1=1*256 palette
 /* 8*/ u8 ScreenBase_Block:5;    // individual screen base offset (text n*2KB, BMP n*16KB)
