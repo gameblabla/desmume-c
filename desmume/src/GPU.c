@@ -735,6 +735,7 @@ static INLINE void renderline_textBG(const GPU * gpu, u8 num, u8 * dst, u32 Y, u
 
 	if(!bgCnt->Palette_256)    /* color: 16 palette entries */
 	{
+#ifdef ENABLE_MOSAIC
 		if (bgCnt->Mosaic_Enable){
 /* test NDS: #2 of 
    http://desmume.sourceforge.net/forums/index.php?action=vthread&forum=2&topic=50&page=0#msg192 */
@@ -801,7 +802,9 @@ static INLINE void renderline_textBG(const GPU * gpu, u8 num, u8 * dst, u32 Y, u
 					line+=line_dir; pt++ ;
 				}
 			}
-		} else {                /* no mosaic mode */
+		} else 
+#endif
+		{                /* no mosaic mode */
 			yoff = ((YBG&7)<<2);
 			xfin = 8 - (xoff&7);
 			for(x = 0; x < LG; xfin = min(x+8, LG))
