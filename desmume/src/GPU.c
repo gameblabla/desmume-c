@@ -59,7 +59,7 @@ u8 GPU_screen[4*256*192];
 
 u8 sprWin[256];
 
-short sizeTab[4][4][2] =
+const short sizeTab[4][4][2] =
 {
       {{256,256}, {512, 256}, {256, 512}, {512, 512}},
       {{128,128}, {256, 256}, {512, 512}, {1024, 1024}},
@@ -68,7 +68,7 @@ short sizeTab[4][4][2] =
 //      {{0, 0}, {0, 0}, {0, 0}, {0, 0}}
 };
 
-size sprSizeTab[4][4] = 
+const size sprSizeTab[4][4] = 
 {
      {{8, 8}, {16, 8}, {8, 16}, {8, 8}},
      {{16, 16}, {32, 8}, {8, 32}, {8, 8}},
@@ -76,7 +76,7 @@ size sprSizeTab[4][4] =
      {{64, 64}, {64, 32}, {32, 64}, {8, 8}},
 };
 
-s8 mode2type[8][4] = 
+const s8 mode2type[8][4] = 
 {
       {0, 0, 0, 0},
       {0, 0, 0, 1},
@@ -2050,13 +2050,15 @@ void GPU_ligne(NDS_Screen * screen, u16 l)
 	c = T1ReadWord(ARM9Mem.ARM9_VMEM, gpu->core * 0x400);
 	
 	// init background color & priorities
-	for(i = 0; i< 256; ++i)
+	/*for(i = 0; i< 256; ++i)
 	{
 		T2WriteWord(dst, i << 1, c);
 		T2WriteWord(spr, i << 1, c);
 		sprPrio[i]=0xFF;
 		sprWin[i]=0;
-	}
+	}*/
+	memset(sprPrio,0xFF,256);
+	memset(sprWin,0,256);
 	
 	// init pixels priorities
 	for (i=0;i<NB_PRIORITIES;i++) {
