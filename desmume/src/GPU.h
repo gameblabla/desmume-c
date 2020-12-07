@@ -27,6 +27,7 @@
 
 #include "ARM9.h"
 #include <stdio.h>
+#include <stdint.h>
 #include "mem.h"
 #include "registers.h"
 #include "FIFO.h"
@@ -390,19 +391,6 @@ typedef struct _reg_dispx {
 
 
 
-
-
-
-
-
-#ifndef min
-#define min(a,b) (((a)<(b))?(a):(b))
-#endif
-
-#ifndef max
-#define max(a,b) (((a)>(b))?(a):(b))
-#endif
-
 typedef BOOL (*fun_gl_Begin) (int screen);
 typedef void (*fun_gl_End) (int screen);
 // the GUI should use this function prior to all gl calls
@@ -701,8 +689,10 @@ static void REG_DISPx_pack_test(GPU * gpu)
 }
 */
 
-extern u8 GPU_screen[4*256*192];
-
+//extern u8 GPU_screen[4*256*192];
+#include <SDL/SDL.h>
+extern SDL_Surface* sdl_screen;
+#define GPU_screen (uint8_t*)sdl_screen->pixels
 
 GPU * GPU_Init(u8 l);
 void GPU_Reset(GPU *g, u8 l);
@@ -816,16 +806,19 @@ void SetupFinalPixelBlitter (GPU *gpu);
 
 #define GPU_setBLDY_EVY(gpu, val) {gpu->BLDY_EVY = (val&0x1f) > 16 ? 16 : (val&0x1f);}
 
+#ifndef min
  #define min(a,b) \
    ({ __typeof__ (a) _a = (a); \
        __typeof__ (b) _b = (b); \
      _a < _b ? _a : _b; })
+#endif
 
+#ifndef max
  #define max(a,b) \
    ({ __typeof__ (a) _a = (a); \
        __typeof__ (b) _b = (b); \
      _a > _b ? _a : _b; })
-
+#endif
 
 #ifdef __cplusplus
 }

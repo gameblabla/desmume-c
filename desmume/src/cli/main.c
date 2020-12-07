@@ -46,7 +46,7 @@
 
 volatile BOOL execute = FALSE;
 static float nds_screen_size_ratio = 1.0f;
-static SDL_Surface * surface;
+SDL_Surface * sdl_screen, *rl_screen;
 
 SoundInterface_struct *SNDCoreList[] = {
   &SNDDummy,
@@ -82,26 +82,32 @@ const u16 cli_kb_cfg[NB_KEYS] =
 
 static void Draw( void)
 {
-	SDL_Surface *rawImage;
-	rawImage = SDL_CreateRGBSurfaceFrom((void*)&GPU_screen, 256, 384, 16, 512, 0x001F, 0x03E0, 0x7C00, 0);
-	if(rawImage == NULL) return;
-	SDL_BlitSurface(rawImage, 0, surface, 0);
-	SDL_UpdateRect(surface, 0, 0, 0, 0);
-	SDL_FreeSurface(rawImage);
+
+#ifdef SDL_SWIZZLEBGR
+	SDL_Flip(sdl_screen);
+#else
+	SDL_BlitSurface(sdl_screen, NULL, rl_screen, NULL);
+	SDL_Flip(rl_screen);
+#endif
 	return;
 }
 
 
 int main(int argc, char ** argv) {
-  static unsigned short keypad = 0;
-  u32 last_cycle = 0;
-  int sdl_quit = 0;
+	static unsigned short keypad = 0;
+	u32 last_cycle = 0;
+	int sdl_quit = 0;
 
-  /* this holds some info about our display */
-  const SDL_VideoInfo *videoInfo;
+#ifdef DISPLAY_FPS
+	u32 fps_timing = 0;
+	u32 fps_frame_counter = 0;
+	u32 fps_previous_time = 0;
+	u32 fps_temp_time;
+	#define NUM_FRAMES_TO_TIME 60
+#endif
 
-  /* the firmware settings */
-  struct NDS_fw_config_data fw_config;
+	/* the firmware settings */
+	struct NDS_fw_config_data fw_config;
 
 	/* default the firmware settings, they may get changed later */
 	NDS_FillDefaultFirmwareConfigData( &fw_config);
@@ -129,27 +135,24 @@ int main(int argc, char ** argv) {
       return 1;
     }
 
-    surface = SDL_SetVideoMode(256, 384, 16, SDL_HWSURFACE | SDL_TRIPLEBUF);
-  
-    if ( !surface ) {
+#ifdef SDL_SWIZZLEBGR
+	sdl_screen = SDL_SetVideoMode(256, 384, 16, SDL_HWSURFACE | SDL_TRIPLEBUF | SDL_SWIZZLEBGR);
+#else
+	rl_screen = SDL_SetVideoMode(256, 384, 16, SDL_HWSURFACE | SDL_TRIPLEBUF);
+	sdl_screen = SDL_CreateRGBSurface(SDL_HWSURFACE, 256, 384, 16, 0x001F, 0x03E0, 0x7C00, 0);
+#endif
+
+    if ( !sdl_screen ) {
       fprintf( stderr, "Video mode set failed: %s\n", SDL_GetError( ) );
       exit( -1);
     }
     
 	SDL_WM_SetCaption("Desmume SDL", NULL);
 
-	/* Fetch the video info */
-	videoInfo = SDL_GetVideoInfo( );
-	if ( !videoInfo ) {
-		fprintf( stderr, "Video query failed: %s\n", SDL_GetError( ) );
-		exit( -1);
-	}
-
 	/* Initialize joysticks */
 	if(!init_joy()) return 1;
 	/* Load our own keyboard configuration */
 	set_kb_keys(cli_kb_cfg);
-
 
 	while(!sdl_quit)
 	{
@@ -167,6 +170,26 @@ int main(int argc, char ** argv) {
 		last_cycle = NDS_exec((560190 << 1) - last_cycle, FALSE);
 		SPU_Emulate();
 		Draw();
+		
+
+#ifdef DISPLAY_FPS
+		fps_frame_counter += 1;
+		fps_temp_time = SDL_GetTicks();
+		fps_timing += fps_temp_time - fps_previous_time;
+		fps_previous_time = fps_temp_time;
+
+		if ( fps_frame_counter == NUM_FRAMES_TO_TIME)
+		{
+			char win_title[100];
+			float fps = (float)fps_timing;
+			fps /= NUM_FRAMES_TO_TIME * 1000.f;
+			fps = 1.0f / fps;
+			fps_frame_counter = 0;
+			fps_timing = 0;
+			sprintf( win_title, "Desmume %f", fps);
+			SDL_WM_SetCaption( win_title, NULL);
+		}
+#endif
 	}
 
 	/* Unload joystick */

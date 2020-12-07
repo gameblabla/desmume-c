@@ -54,9 +54,7 @@ NDS_Screen MainScreen;
 NDS_Screen SubScreen;
 
 //#define DEBUG_TRI
-
-u8 GPU_screen[4*256*192];
-
+//u8 GPU_screen[4*256*192];
 u8 sprWin[256];
 
 const short sizeTab[4][4][2] =
@@ -970,7 +968,7 @@ void rot_BMP_map(GPU * gpu, int num, s32 auxX, s32 auxY, int lg, u8 * dst, u8 * 
 
 typedef void (*rot_fun)(GPU * gpu, int num, s32 auxX, s32 auxY, int lg, u8 * dst, u8 * map, u8 * tile, u8 * pal , int i, u16 H);
 
-INLINE void rot_scale_op(GPU * gpu, u8 num, u8 * dst, u16 H, s32 X, s32 Y, s16 PA, s16 PB, s16 PC, s16 PD, u16 LG, s32 wh, s32 ht, BOOL wrap, rot_fun fun, u8 * map, u8 * tile, u8 * pal)
+static INLINE void rot_scale_op(GPU * gpu, u8 num, u8 * dst, u16 H, s32 X, s32 Y, s16 PA, s16 PB, s16 PC, s16 PD, u16 LG, s32 wh, s32 ht, BOOL wrap, rot_fun fun, u8 * map, u8 * tile, u8 * pal)
 {
 	ROTOCOORD x, y;
 
@@ -1004,7 +1002,7 @@ INLINE void rot_scale_op(GPU * gpu, u8 num, u8 * dst, u16 H, s32 X, s32 Y, s16 P
 	}
 }
 
-INLINE void apply_rot_fun(GPU * gpu, u8 num, u8 * dst, u16 H, s32 X, s32 Y, s16 PA, s16 PB, s16 PC, s16 PD, u16 LG, rot_fun fun, u8 * map, u8 * tile, u8 * pal)
+static INLINE void apply_rot_fun(GPU * gpu, u8 num, u8 * dst, u16 H, s32 X, s32 Y, s16 PA, s16 PB, s16 PC, s16 PD, u16 LG, rot_fun fun, u8 * map, u8 * tile, u8 * pal)
 {
 	struct _BGxCNT * bgCnt = &(gpu->dispx_st)->dispx_BGxCNT[num].bits;
 	s32 wh = gpu->BGSize[num][0];
@@ -1013,7 +1011,7 @@ INLINE void apply_rot_fun(GPU * gpu, u8 num, u8 * dst, u16 H, s32 X, s32 Y, s16 
 }
 
 
-INLINE void rotBG2(GPU * gpu, u8 num, u8 * dst, u16 H, s32 X, s32 Y, s16 PA, s16 PB, s16 PC, s16 PD, u16 LG) {
+static INLINE void rotBG2(GPU * gpu, u8 num, u8 * dst, u16 H, s32 X, s32 Y, s16 PA, s16 PB, s16 PC, s16 PD, u16 LG) {
 	u8 * map = gpu->BG_map_ram[num];
 	u8 * tile = (u8 *)gpu->BG_tile_ram[num];
 	u8 * pal = ARM9Mem.ARM9_VMEM + gpu->core * 0x400;
@@ -1021,7 +1019,7 @@ INLINE void rotBG2(GPU * gpu, u8 num, u8 * dst, u16 H, s32 X, s32 Y, s16 PA, s16
 	apply_rot_fun(gpu, num, dst, H,X,Y,PA,PB,PC,PD,LG, rot_tiled_8bit_entry, map, tile, pal);
 }
 
-INLINE void extRotBG2(GPU * gpu, u8 num, u8 * dst, u16 H, s32 X, s32 Y, s16 PA, s16 PB, s16 PC, s16 PD, s16 LG)
+static INLINE void extRotBG2(GPU * gpu, u8 num, u8 * dst, u16 H, s32 X, s32 Y, s16 PA, s16 PB, s16 PC, s16 PD, s16 LG)
 {
 	struct _BGxCNT * bgCnt = &(gpu->dispx_st)->dispx_BGxCNT[num].bits;
 	
@@ -1139,7 +1137,7 @@ void extRotBG(GPU * gpu, u8 num, u8 * DST)
 /* if i understand it correct, and it fixes some sprite problems in chameleon shot */
 /* we have a 15 bit color, and should use the pal entry bits as alpha ?*/
 /* http://nocash.emubase.de/gbatek.htm#dsvideoobjs */
-INLINE void render_sprite_BMP (GPU * gpu, u16 l, u8 * dst, u16 * src, u8 * prioTab, 
+static INLINE void render_sprite_BMP (GPU * gpu, u16 l, u8 * dst, u16 * src, u8 * prioTab, 
 							   u8 prio, int lg, int sprX, int x, int xdir) 
 {
 	int i; u16 color;
@@ -1158,7 +1156,7 @@ INLINE void render_sprite_BMP (GPU * gpu, u16 l, u8 * dst, u16 * src, u8 * prioT
 }
 
 
-INLINE void render_sprite_256 (	GPU * gpu, u16 l, u8 * dst, u8 * src, u16 * pal, 
+static INLINE void render_sprite_256 (	GPU * gpu, u16 l, u8 * dst, u8 * src, u16 * pal, 
 								u8 * prioTab, u8 prio, int lg, int sprX, int x, int xdir, u8 alpha)
 {
 	int i; 
@@ -1180,7 +1178,7 @@ INLINE void render_sprite_256 (	GPU * gpu, u16 l, u8 * dst, u8 * src, u16 * pal,
 	}
 }
 
-INLINE void render_sprite_16 (	GPU * gpu, u16 l, u8 * dst, u8 * src, u16 * pal, 
+static INLINE void render_sprite_16 (	GPU * gpu, u16 l, u8 * dst, u8 * src, u16 * pal, 
 								u8 * prioTab, u8 prio, int lg, int sprX, int x, int xdir, u8 alpha)
 {
 	int i; 
@@ -1205,7 +1203,7 @@ INLINE void render_sprite_16 (	GPU * gpu, u16 l, u8 * dst, u8 * src, u16 * pal,
 	}
 }
 
-INLINE void render_sprite_Win (GPU * gpu, u16 l, u8 * src,
+static INLINE void render_sprite_Win (GPU * gpu, u16 l, u8 * src,
 	int col256, int lg, int sprX, int x, int xdir) {
 	int i; u8 palette, palette_entry;
 	u16 x1;
@@ -1226,7 +1224,7 @@ INLINE void render_sprite_Win (GPU * gpu, u16 l, u8 * src,
 
 
 // return val means if the sprite is to be drawn or not
-INLINE BOOL compute_sprite_vars(_OAM_ * spriteInfo, u16 l, 
+static INLINE BOOL compute_sprite_vars(_OAM_ * spriteInfo, u16 l, 
 	size *sprSize, s32 *sprX, s32 *sprY, s32 *x, s32 *y, s32 *lg, int *xdir) {
 
 	*x = 0;
