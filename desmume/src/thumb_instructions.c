@@ -381,7 +381,7 @@ static u32 FASTCALL OP_ROR_REG(armcpu_t *cpu)
                cpu->CPSR.bits.Z = cpu->R[REG_NUM(i, 0)] == 0;
                return 3;
      }
-     v &= 0xF;
+     v &= 0x1F;
      if(v == 0)
      {
                cpu->CPSR.bits.C = BIT31(cpu->R[REG_NUM(i, 0)]);
