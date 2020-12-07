@@ -764,34 +764,25 @@ static INLINE void FetchPSGData(channel_struct *chan, s32 *data)
 
 static INLINE void MixL(channel_struct *chan, s32 data)
 {
-   if (data)
-   {
-      data = (data * chan->vol / 127) >> chan->datashift;
-      SPU->sndbuf[SPU->bufpos<<1] += data;
-   }
+	data = (data * chan->vol / 127) >> chan->datashift;
+	SPU->sndbuf[SPU->bufpos<<1] += data;
 }
 
 //////////////////////////////////////////////////////////////////////////////
 
 static INLINE void MixR(channel_struct *chan, s32 data)
 {
-   if (data)
-   {
-      data = (data * chan->vol / 127) >> chan->datashift;
-      SPU->sndbuf[(SPU->bufpos<<1)+1] += data;
-   }
+	data = (data * chan->vol / 127) >> chan->datashift;
+	SPU->sndbuf[(SPU->bufpos<<1)+1] += data;
 }
 
 //////////////////////////////////////////////////////////////////////////////
 
 static INLINE void MixLR(channel_struct *chan, s32 data)
 {
-   if (data)
-   {
-      data = ((data * chan->vol) / 127) >> chan->datashift;
-      SPU->sndbuf[SPU->bufpos<<1] += data * (127 - chan->pan) / 127;
-      SPU->sndbuf[(SPU->bufpos<<1)+1] += data * chan->pan / 127;
-   }
+	data = ((data * chan->vol) / 127) >> chan->datashift;
+	SPU->sndbuf[SPU->bufpos<<1] += data * (127 - chan->pan) / 127;
+	SPU->sndbuf[(SPU->bufpos<<1)+1] += data * chan->pan / 127;
 }
 
 //////////////////////////////////////////////////////////////////////////////
