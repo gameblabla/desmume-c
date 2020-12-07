@@ -2119,10 +2119,11 @@ void GPU_ligne(NDS_Screen * screen, u16 l)
 				case 2:
 					capx = 256;
 					capy = 128;
+				break;
 				case 3:
 					capx = 256;
 					capy = 192;
-					break;
+				break;
 			}
 			
 			if(l < capy)	/* check if our line is in cature area */
