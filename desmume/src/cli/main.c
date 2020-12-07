@@ -162,6 +162,7 @@ int main(int argc, char ** argv) {
               SDL_GetError());
       return 1;
     }
+    SDL_ShowCursor(0);
 #if defined(GKD350H)
 	rl_screen = SDL_SetVideoMode(320, 240, 16, SDL_HWSURFACE | SDL_TRIPLEBUF);
 	sdl_screen = SDL_CreateRGBSurface(SDL_HWSURFACE, 256, 384, 16, 0x001F, 0x03E0, 0x7C00, 0);
