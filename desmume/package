@@ -18,8 +18,8 @@ esac
 
 print '[Desktop Entry]
 Type=Application
-Name=Desmume
-Comment=NDS emulator
+Name=LameDS
+Comment=Horrible NDS emulator
 Exec=desmume.elf %f
 Icon=icon
 Terminal=false
@@ -27,6 +27,6 @@ Type=Application
 Categories=emulators;
 X-OD-NeedsDownscaling=true' > opk/default."$1".desktop
 
-mksquashfs ./opk desmume_"$1".opk -all-root -noappend -no-exports -no-xattrs
+mksquashfs ./opk lameds_"$1".opk -all-root -noappend -no-exports -no-xattrs
 
 rm -r opk
