@@ -3074,7 +3074,7 @@ void FASTCALL MMU_doDMA(u32 proc, u32 num)
 		u32 i=0;
 		// 32 bit or 16 bit transfer ?
 		int sz = ((MMU.DMACrt[proc][num]>>26)&1)? 4 : 2; 
-		int dstinc,srcinc;
+		int dstinc = 0,srcinc = 0;
 		int u=(MMU.DMACrt[proc][num]>>21);
 		switch(u & 0x3) {
 			case 0 :  dstinc =  sz; break;

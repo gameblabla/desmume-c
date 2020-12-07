@@ -6807,7 +6807,7 @@ static u32 FASTCALL  OP_LDMDB_W(armcpu_t *cpu)
 static u32 FASTCALL  OP_LDMIA2(armcpu_t *cpu)
 {
      u32 i = cpu->instruction;
-     u32 oldmode;
+     u32 oldmode = 0;
      
      u32 c = 0;
      
@@ -6863,7 +6863,7 @@ static u32 FASTCALL  OP_LDMIA2(armcpu_t *cpu)
 static u32 FASTCALL  OP_LDMIB2(armcpu_t *cpu)
 {
      u32 i = cpu->instruction;
-     u32 oldmode;
+     u32 oldmode = 0;
      u32 c = 0;
      
      u32 start = cpu->R[REG_POS(i,16)];
@@ -6922,7 +6922,7 @@ static u32 FASTCALL  OP_LDMDA2(armcpu_t *cpu)
 {
      u32 i = cpu->instruction;
           
-     u32 oldmode;
+     u32 oldmode = 0;
      u32 c = 0;
      u32 * registres;
      u32 * waitState;
@@ -6985,7 +6985,7 @@ static u32 FASTCALL  OP_LDMDB2(armcpu_t *cpu)
 {
      u32 i = cpu->instruction;
           
-     u32 oldmode;
+     u32 oldmode = 0;
      u32 c = 0;
      u32 * registres;
      u32 * waitState;
@@ -7047,7 +7047,7 @@ static u32 FASTCALL  OP_LDMIA2_W(armcpu_t *cpu)
      u32 i = cpu->instruction;
      u32 c = 0;
           
-     u32 oldmode;
+     u32 oldmode = 0;
      u32 start = cpu->R[REG_POS(i,16)];
      u32 * registres;
      u32 * waitState;
@@ -7104,7 +7104,7 @@ static u32 FASTCALL  OP_LDMIB2_W(armcpu_t *cpu)
      u32 i = cpu->instruction;
      u32 c = 0;
           
-     u32 oldmode;
+     u32 oldmode = 0;
      u32 start = cpu->R[REG_POS(i,16)];
      u32 * registres;
      u32 * waitState;
@@ -7163,7 +7163,7 @@ static u32 FASTCALL  OP_LDMDA2_W(armcpu_t *cpu)
      u32 i = cpu->instruction;
      u32 c = 0;
           
-     u32 oldmode;
+     u32 oldmode = 0;
      u32 start = cpu->R[REG_POS(i,16)];
      u32 * registres;
      u32 * waitState;
@@ -7223,7 +7223,7 @@ static u32 FASTCALL  OP_LDMDB2_W(armcpu_t *cpu)
      u32 i = cpu->instruction;
      u32 c = 0;
           
-     u32 oldmode;
+     u32 oldmode = 0;
      u32 start = cpu->R[REG_POS(i,16)];
      u32 * registres;
      u32 * waitState;

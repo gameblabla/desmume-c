@@ -189,7 +189,7 @@ void mc_realloc(memory_chip_t *mc, int type, u32 size)
 void mc_load_file(memory_chip_t *mc, const char* filename)
 {
    long size;
-   int type;
+   int type = 0;
    FILE* file = fopen(filename, "rb+");
    if(file == NULL)
    {
