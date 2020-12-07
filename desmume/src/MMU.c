@@ -3126,6 +3126,13 @@ void FASTCALL MMU_doDMA(u32 proc, u32 num)
 		DMASrc[proc][num] = src;
 		if((u & 0x3)!=3) //but dont write back dst if we were supposed to reload
 			DMADst[proc][num] = dst;
+			
+
+		//this is probably not the best place to do it, but the dma code in ndssystem is so bad i didnt want to touch it
+		//until it all gets rewritten. so this is here as a reminder, at least.
+		//(there is no proof for this code, but it is reasonable)
+		T1WriteLong(MMU.MMU_MEM[proc][0x40], 0xB0+12*num, DMASrc[proc][num]);
+		T1WriteLong(MMU.MMU_MEM[proc][0x40], 0xB4+12*num, DMADst[proc][num]);
 	}
 }
 
