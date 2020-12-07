@@ -197,7 +197,7 @@ void SPU_KeyOn(int channel)
 {
    channel_struct *chan = &SPU->chan[channel];
 
-   chan->sampinc = (16777216 / (0x10000 - (double)chan->timer)) / 44100;
+   chan->sampinc = (16777216 / (0x10000 - (float)chan->timer)) / 44100;
             
 //   LOG("Channel %d key on: vol = %d, datashift = %d, hold = %d, pan = %d, waveduty = %d, repeat = %d, format = %d, source address = %07X, timer = %04X, loop start = %04X, length = %06X, MMU.ARM7_REG[0x501] = %02X\n", channel, chan->vol, chan->datashift, chan->hold, chan->pan, chan->waveduty, chan->repeat, chan->format, chan->addr, chan->timer, chan->loopstart, chan->length, T1ReadByte(MMU.ARM7_REG, 0x501));
    switch(chan->format)
@@ -574,7 +574,7 @@ void SPU_WriteWord(u32 addr, u16 val)
             channel_struct *chan = &SPU->chan[(addr >> 4) & 0xF];
 //            LOG("Sound Channel %d Timer Register write: %04X\n", (addr >> 4) & 0xF, val);
             chan->timer = val & 0xFFFF;
-            chan->sampinc = (16777216 / (0x10000 - (double)chan->timer)) / 44100;
+            chan->sampinc = (16777216 / (0x10000 - (float)chan->timer)) / 44100;
             T1WriteWord(MMU.ARM7_REG, addr, val);
             return;
          }
@@ -658,7 +658,7 @@ void SPU_WriteLong(u32 addr, u32 val)
 //            LOG("Sound Channel %d Timer/Loop Start Register write: - %08X\n", (addr >> 4) & 0xF, val);
             chan->timer = val & 0xFFFF;
             chan->loopstart = val >> 16;
-            chan->sampinc = (16777216 / (0x10000 - (double)chan->timer)) / 44100;
+            chan->sampinc = (16777216 / (0x10000 - (float)chan->timer)) / 44100;
             T1WriteLong(MMU.ARM7_REG, addr, val);
             return;
          }
@@ -791,11 +791,11 @@ static INLINE void TestForLoop(channel_struct *chan)
 {
    chan->sampcnt += chan->sampinc;
 
-   if (chan->sampcnt > (double)chan->length)
+   if (chan->sampcnt > (float)chan->length)
    {
       // Do we loop? Or are we done?
       if (chan->repeat == 1)
-         chan->sampcnt = (double)chan->loopstart; // Is this correct?
+         chan->sampcnt = (float)chan->loopstart; // Is this correct?
       else
       {
          chan->status = CHANSTAT_STOPPED;
@@ -812,12 +812,12 @@ static INLINE void TestForLoop2(channel_struct *chan)
 {
    chan->sampcnt += chan->sampinc;
 
-   if (chan->sampcnt > (double)chan->length)
+   if (chan->sampcnt > (float)chan->length)
    {
       // Do we loop? Or are we done?
       if (chan->repeat == 1)
       {
-         chan->sampcnt = (double)chan->loopstart; // Is this correct?
+         chan->sampcnt = (float)chan->loopstart; // Is this correct?
          chan->pcm16b = (s16)((chan->buf8[1] << 8) | chan->buf8[0]);
          chan->index = chan->buf8[2] & 0x7F;
          chan->lastsampcnt = 7;
