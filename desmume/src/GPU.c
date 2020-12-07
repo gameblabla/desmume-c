@@ -202,7 +202,7 @@ void GPU_DeInit(GPU * gpu)
 
 void GPU_resortBGs(GPU *gpu)
 {
-	int i, j, prio;
+	int i, prio;
 	struct _DISPCNT * cnt = &gpu->dispx_st->dispx_DISPCNT.bits;
 	itemsForPriority_t * item;
 
@@ -229,14 +229,13 @@ void GPU_resortBGs(GPU *gpu)
 		item->nbBGs=0;
 		item->nbPixelsX=0;
 	}
-	for (i=NB_BG,j=0; i>0; ) {
+	for (i=NB_BG; i>0; ) {
 		i--;
 		if (!gpu->LayersEnable[i]) continue;
 		prio = (gpu->dispx_st)->dispx_BGxCNT[i].bits.Priority;
 		item = &(gpu->itemsForPriority[prio]);
 		item->BGs[item->nbBGs]=i;
 		item->nbBGs++;
-		j++;
 	}
 	
 #if 0
@@ -326,14 +325,9 @@ void GPU_setVideoProp(GPU * gpu, u32 p)
 		gpu->spriteRender = sprite2D;
 	}
      
-        if(cnt->OBJ_BMP_1D_Bound && (gpu->core == GPU_MAIN))
-	{
-		gpu->sprBMPBoundary = 8;
-	}
-	else
-	{
-		gpu->sprBMPBoundary = 7;
-	}
+	gpu->sprBMPBoundary = 128;
+	if(gpu->core == GPU_MAIN)
+		gpu->sprBMPBoundary = cnt->OBJ_BMP_1D_Bound * 256;
 
 	gpu->sprEnable = cnt->OBJ_Enable;
 	
@@ -1971,17 +1965,16 @@ void GPU_ligne(NDS_Screen * screen, u16 l)
 	struct _DISPCNT * dispCnt = &(gpu->dispx_st)->dispx_DISPCNT.bits;
 	struct _MASTER_BRIGHT * mBright;
 	u8 * dst =  GPU_screen + (screen->offset + l) * 512;
-	u8 * mdst =  GPU_screen + (MainScreen.offset + l) * 512;
-	u8 * sdst =  GPU_screen + (SubScreen.offset + l) * 512;
 	itemsForPriority_t * item;
 	u8 spr[512];
 	u8 sprPrio[256];
 	u8 prio;
 	int i;
-	int ix;
 	int vram_bank;
 	u16 i16;
 	u32 c;
+	
+	uint_fast8_t BG_enabled  = 1;
 	
 	/* initialize the scanline black */
 	/* not doing this causes invalid colors when all active BGs are prevented to draw at some place */
@@ -2032,11 +2025,17 @@ void GPU_ligne(NDS_Screen * screen, u16 l)
 
 	c = T1ReadWord(ARM9Mem.ARM9_VMEM, gpu->core * 0x400);
 	
+	for(uint_fast16_t i = 0; i< 256; ++i) T2WriteWord(dst, i << 1, c);
+
+	if (!gpu->LayersEnable[0] && !gpu->LayersEnable[1] && 
+			!gpu->LayersEnable[2] && !gpu->LayersEnable[3] && 
+				!gpu->LayersEnable[4]) return;
+	
 	// init background color & priorities
 	for(i = 0; i< 256; ++i)
 	{
-		T2WriteWord(dst, i << 1, c);
-		T2WriteWord(spr, i << 1, c);
+		//T2WriteWord(dst, i << 1, c);
+		//T2WriteWord(spr, i << 1, c);
 		sprPrio[i]=0xFF;
 		sprWin[i]=0;
 	}
@@ -2047,9 +2046,12 @@ void GPU_ligne(NDS_Screen * screen, u16 l)
 	}
 
 	// for all the pixels in the line
-	if (gpu->LayersEnable[4]) {
+	if (gpu->LayersEnable[4])
+	{
+		for(int i = 0; i< 256; ++i) T2WriteWord(spr, i << 1, c);
 		gpu->spriteRender(gpu, l, spr, sprPrio);
-		for(i= 0; i<256; i++) {
+		for(i= 0; i<256; i++)
+		{
 			// assign them to the good priority item
 			prio = sprPrio[i];
 			if (prio >=4) continue;
@@ -2060,6 +2062,9 @@ void GPU_ligne(NDS_Screen * screen, u16 l)
 		}
 	}
 
+	if (!gpu->LayersEnable[0] && !gpu->LayersEnable[1] && !gpu->LayersEnable[2] && !gpu->LayersEnable[3])
+		BG_enabled = 0;
+
 	// paint lower priorities fist
 	// then higher priorities on top
 	for(prio=NB_PRIORITIES; prio > 0; )
@@ -2067,25 +2072,33 @@ void GPU_ligne(NDS_Screen * screen, u16 l)
 		prio--;
 		item = &(gpu->itemsForPriority[prio]);
 		// render BGs
-		for (i=0; i < item->nbBGs; i++) 
+		if (BG_enabled)
 		{
-			i16 = item->BGs[i];
-
-			// If BG0, core A, and 3D is enabled, ask the gpu3D plugin for data
-			if (i16 == 0 && dispCnt->BG0_3D && gpu->core == 0)
+			for (int i=0; i < item->nbBGs; i++) 
 			{
-				gpu3D->NDS_3D_GetLine (l, (u16*)dst);
-			}
-			else
-			{
+				i16 = item->BGs[i];
 				if (gpu->LayersEnable[i16])
+				{
+					if (gpu->core == GPU_MAIN)
+					{
+						if (i16 == 0 && dispCnt->BG0_3D)
+						{
+							gpu3D->NDS_3D_GetLine (l, (u16*)dst);
+							continue;
+						}
+					}
 					modeRender[dispCnt->BG_Mode][i16](gpu, i16, l, dst);
+				}
 			}
 		}
 		// render sprite Pixels
-		for (i=0; i < item->nbPixelsX; i++) {
-			i16=item->PixelsX[i];
-			T2WriteWord(dst, i16 << 1, T2ReadWord(spr, i16 << 1));
+		if (gpu->LayersEnable[4])
+		{
+			for (int i=0; i < item->nbPixelsX; i++)
+			{
+				i16=item->PixelsX[i];
+				T2WriteWord(dst, i16 << 1, T2ReadWord(spr, i16 << 1));
+			}
 		}
 	}
 	
@@ -2135,7 +2148,7 @@ void GPU_ligne(NDS_Screen * screen, u16 l)
 						if(capcnt->Source_A == 1)	/* capture 3D only */
 						{
 							u16 cap3DLine[256];	/* temp buffer for 3D line reading */
-							gpu3D->NDS_3D_GetLine (l, cap3DLine);	/*FIXME: not sure it's good, since I hadn't seen how 3D works in desmume */
+							gpu3D->NDS_3D_GetLine (l, cap3DLine);
 							for(i = 0; i < (capx<<1); i++) T1WriteWord(capDst, i, cap3DLine[i]);	/* copy this line to buffer */
 						}
 						else	/* capture all screen (BG + OBJ + 3D) */
@@ -2145,11 +2158,6 @@ void GPU_ligne(NDS_Screen * screen, u16 l)
 					
 						break;
 					case 1: /* source B only */
-						if(capcnt->Source_B == 1)	/* capture from display FIFO */
-						{
-							/* TODO ... */
-						}
-						else	/* capture from VRAM */
 						{
 							/* calculate vram source address */
 							u8 *capSrc = (ARM9Mem.ARM9_LCD 
