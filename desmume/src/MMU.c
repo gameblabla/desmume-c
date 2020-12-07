@@ -253,7 +253,7 @@ void MMU_clearMem()
 	memset(ARM9Mem.ARM9_WRAM, 0, 0x01000000);
 	memset(ARM9Mem.MAIN_MEM,  0, 0x400000);
 
-	memset(ARM9Mem.blank_memory,  0, 0x020000);
+	memset(ARM9Mem.blank_memory,  0, sizeof(ARM9Mem.blank_memory));
 	
 	memset(MMU.ARM7_ERAM,     0, 0x010000);
 	memset(MMU.ARM7_REG,      0, 0x010000);
@@ -975,7 +975,7 @@ void FASTCALL MMU_write8(u32 proc, u32 adr, u8 val)
         }
     }
 
-	if (adr & 0xFF800000 == 0x04800000)
+	if ((adr & 0xFF800000) == 0x04800000)
 	{
 		/* is wifi hardware, dont intermix with regular hardware registers */
 		/* FIXME handle 8 bit writes */
@@ -2024,7 +2024,7 @@ void FASTCALL MMU_write32(u32 proc, u32 adr, u32 val)
         }
     }
 
-	if (adr & 0xFF800000 == 0x04800000) {
+	if ((adr & 0xFF800000) == 0x04800000) {
 	/* access to non regular hw registers */
 	/* return to not overwrite valid data */
 		return ;
