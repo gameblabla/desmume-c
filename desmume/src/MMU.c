@@ -772,7 +772,7 @@ u32 FASTCALL MMU_read32(u32 proc, u32 adr)
 
 			case 0x4000604:
 			{
-				return (gpu3D->NDS_3D_GetNumPolys()&2047) & ((gpu3D->NDS_3D_GetNumVertex()&8191) << 16);
+				return (gpu3D->NDS_3D_GetNumPolys()&2047) | ((gpu3D->NDS_3D_GetNumVertex()&8191) << 16);
 				//LOG ("read32 - RAM_COUNT -> 0x%X", ((u32 *)(MMU.MMU_MEM[proc][(adr>>20)&0xFF]))[(adr&MMU.MMU_MASK[proc][(adr>>20)&0xFF])>>2]);
 			}
 			
