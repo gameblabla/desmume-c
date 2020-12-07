@@ -109,8 +109,13 @@ static const uint32_t TblSkip[5][5] = {
 static void Draw( void)
 {
 #ifdef GKD350H
-	scale_256x384_to_160x240((uint32_t* restrict)rl_screen->pixels, (uint32_t* restrict)sdl_screen->pixels);
-	SDL_Flip(rl_screen);
+#ifdef FRAMESKIP
+	if (!TblSkip[FrameSkip][SkipCnt])
+#endif
+	{
+		scale_256x384_to_160x240((uint32_t* restrict)rl_screen->pixels, (uint32_t* restrict)sdl_screen->pixels);
+		SDL_Flip(rl_screen);
+	}
 #else
 #ifdef SDL_SWIZZLEBGR
 #ifdef FRAMESKIP
