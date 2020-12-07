@@ -616,6 +616,14 @@ u8 FASTCALL MMU_read8(u32 proc, u32 adr)
 				break;
 			case REG_DISPA_DISPSTAT+1:
 				break;
+			case REG_DISPx_VCOUNT:
+				if(proc==ARMCPU_ARM7)
+				return nds.VCount&0xFF;
+			break;
+			case REG_DISPx_VCOUNT+1:
+				if(proc==ARMCPU_ARM7)
+				return (nds.VCount>>8)&0xFF;
+			break;
 			//sqrtcnt isnt big enough for these to exist. but they'd probably return 0 so its ok
 			case REG_SQRTCNT+2: return 0;
 			case REG_SQRTCNT+3: return 0;
@@ -672,6 +680,10 @@ u16 FASTCALL MMU_read16(u32 proc, u32 adr)
 		/* Adress is an IO register */
 		switch(adr)
 		{
+			case REG_DISPx_VCOUNT:
+				if(proc==ARMCPU_ARM7)
+				return nds.VCount;
+			break;
 			case 0x04000604:
 				return (gpu3D->NDS_3D_GetNumPolys()&2047);
 			case 0x04000606:
@@ -752,6 +764,10 @@ u32 FASTCALL MMU_read32(u32 proc, u32 adr)
 		/* Adress is an IO register */
 		switch(adr)
 		{
+			case REG_DISPx_VCOUNT:
+				if(proc==ARMCPU_ARM7)
+				return nds.VCount;
+			break;
 			// This is hacked due to the only current 3D core
 			case 0x04000600:
             {
@@ -973,6 +989,14 @@ void FASTCALL MMU_write8(u32 proc, u32 adr, u8 val)
 
 	switch(adr)
 	{
+		case REG_DISPx_VCOUNT:
+			if(proc == ARMCPU_ARM9)
+				return nds.VCount & 0xFF;
+		break;
+		case REG_DISPx_VCOUNT+1:
+			if(proc == ARMCPU_ARM9)
+				return (nds.VCount>>8) & 0xFF;
+		break;
 		case REG_DISPA_WIN0H: 	 
 			if(proc == ARMCPU_ARM9) GPU_setWIN0_H1(MainScreen.gpu, val);
 			break ; 	 
@@ -1349,14 +1373,14 @@ void FASTCALL MMU_write16(u32 proc, u32 adr, u16 val)
 	adr &= 0x0FFFFFFF;
 
         // This is bad, remove it
-        if(proc == ARMCPU_ARM7)
+        /*if(proc == ARMCPU_ARM7)
         {
            if ((adr>=0x04000400)&&(adr<0x0400051D))
            {
               SPU_WriteWord(adr, val);
               return;
            }
-        }
+        }*/
 
 	if((adr >> 24) == 4)
 	{
@@ -1369,6 +1393,12 @@ void FASTCALL MMU_write16(u32 proc, u32 adr, u16 val)
 		/* Adress is an IO register */
 		else switch(adr)
 		{
+			case REG_DISPA_DISPSTAT:
+				break;
+			case REG_DISPA_VCOUNT:
+				if(proc == ARMCPU_ARM9)
+					return nds.VCount;
+			break;
 			case 0x0400035C:
 			{
 				((u16 *)(MMU.MMU_MEM[proc][0x40]))[0x35C>>1] = val;
@@ -2033,6 +2063,10 @@ void FASTCALL MMU_write32(u32 proc, u32 adr, u32 val)
 		}
 		else switch(adr)
 		{
+			case REG_DISPA_DISPSTAT:
+				break;
+
+			case REG_DISPx_VCOUNT: return nds.VCount;
 			// Alpha test reference value - Parameters:1
 			case 0x04000340:
 			{
