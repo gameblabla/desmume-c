@@ -239,7 +239,7 @@ u32 DMADst[2][4] = {{0, 0, 0, 0}, {0, 0, 0, 0}};
 
 void MMU_clearMem()
 {
-	int i;
+	uint_fast8_t i;
 	
 	memset(ARM9Mem.ARM9_ABG,  0, 0x080000);
 	memset(ARM9Mem.ARM9_AOBJ, 0, 0x040000);
@@ -559,7 +559,7 @@ switch (VRAMBankCnt & 7) {
 
 void MMU_setRom(u8 * rom, u32 mask)
 {
-	unsigned int i;
+	uint_fast8_t i;
 	MMU.CART_ROM = rom;
 	
 	for(i = 0x80; i<0xA0; ++i)
@@ -574,7 +574,7 @@ void MMU_setRom(u8 * rom, u32 mask)
 
 void MMU_unsetRom()
 {
-	unsigned int i;
+	uint_fast8_t i;
 	MMU.CART_ROM=MMU.UNUSED_RAM;
 	
 	for(i = 0x80; i<0xA0; ++i)
@@ -590,17 +590,18 @@ char txt[80];
 
 u8 FASTCALL MMU_read8(u32 proc, u32 adr)
 {
+	if (proc == ARMCPU_ARM9)
+	{
 #ifdef INTERNAL_DTCM_READ
-	if((proc==ARMCPU_ARM9)&((adr&(~0x3FFF))==MMU.DTCMRegion))
-	{
-		return ARM9Mem.ARM9_DTCM[adr&0x3FFF];
-	}
+		if((adr&(~0x3FFF))==MMU.DTCMRegion)
+		{
+			return ARM9Mem.ARM9_DTCM[adr&0x3FFF];
+		}
 #endif
-
-	if(proc==ARMCPU_ARM9 && adr<0x02000000)
-	{
-		//printlog("MMU ITCM (08) Read %08X: %08X\n", adr, T1ReadByte(ARM9Mem.ARM9_ITCM, adr&0x7FFF));
-		return T1ReadByte(ARM9Mem.ARM9_ITCM, adr&0x7FFF);
+		if(adr<0x02000000)
+		{
+			return T1ReadByte(ARM9Mem.ARM9_ITCM, adr&0x7FFF);
+		}
 	}
 
 	#ifdef CFLASH_EMU
@@ -653,23 +654,23 @@ u8 FASTCALL MMU_read8(u32 proc, u32 adr)
     return MMU.MMU_MEM[proc][(adr>>20)&0xFF][adr&MMU.MMU_MASK[proc][(adr>>20)&0xFF]];
 }
 
-
-
 u16 FASTCALL MMU_read16(u32 proc, u32 adr)
 {    
+	if (proc == ARMCPU_ARM9)
+	{
 #ifdef INTERNAL_DTCM_READ
-	if((proc == ARMCPU_ARM9) && ((adr & ~0x3FFF) == MMU.DTCMRegion))
-	{
-		/* Returns data from DTCM (ARM9 only) */
-		return T1ReadWord(ARM9Mem.ARM9_DTCM, adr & 0x3FFF);
-	}
+		if((adr & ~0x3FFF) == MMU.DTCMRegion)
+		{
+			/* Returns data from DTCM (ARM9 only) */
+			return T1ReadWord(ARM9Mem.ARM9_DTCM, adr & 0x3FFF);
+		}
 #endif
-	if(proc==ARMCPU_ARM9 && adr<0x02000000)
-	{
-		//printlog("MMU ITCM (16) Read %08X: %08X\n", adr, T1ReadWord(ARM9Mem.ARM9_ITCM, adr&0x7FFF));
-		return T1ReadWord(ARM9Mem.ARM9_ITCM, adr&0x7FFF);	
+		if(adr<0x02000000)
+		{
+			return T1ReadWord(ARM9Mem.ARM9_ITCM, adr&0x7FFF);	
+		}
 	}
-	
+
 	#ifdef CFLASH_EMU
 	// CFlash reading, Mic
 	if ((adr>=0x08800000)&&(adr<0x09900000))
@@ -741,157 +742,143 @@ u16 FASTCALL MMU_read16(u32 proc, u32 adr)
 	 
 u32 FASTCALL MMU_read32(u32 proc, u32 adr)
 {
-#ifdef INTERNAL_DTCM_READ
-	if((proc == ARMCPU_ARM9) && ((adr & ~0x3FFF) == MMU.DTCMRegion))
-	{
-		/* Returns data from DTCM (ARM9 only) */
-		return T1ReadLong(ARM9Mem.ARM9_DTCM, adr & 0x3FFF);
-	}
-#endif
-
-	if(proc==ARMCPU_ARM9 && adr<0x02000000) 
-	{
-		//printlog("MMU ITCM (32) Read %08X: %08X\n", adr, T1ReadLong(ARM9Mem.ARM9_ITCM, adr&0x7FFF));
-		return T1ReadLong(ARM9Mem.ARM9_ITCM, adr&0x7FFF);
-	}
+	u32 gxstat;
+	u16 IPCFIFO_CNT, IPCFIFO_CNT_remote;
+	u32 fifonum;
+	u32 val, remote = (proc+1) & 1;
 	
-	#ifdef CFLASH_EMU
-	// CFlash reading, Mic
-	if ((adr>=0x9000000)&&(adr<0x9900000))
-	   return (unsigned long)cflash_read(adr);
-	#endif
-	adr &= 0x0FFFFFFF;
-
-	if((adr >> 24) == 4)
+	if (proc == ARMCPU_ARM9)
 	{
-		/* Adress is an IO register */
-		switch(adr)
+#ifdef INTERNAL_DTCM_READ
+		if((adr & ~0x3FFF) == MMU.DTCMRegion)
 		{
-			case REG_DISPx_VCOUNT:
-				if(proc==ARMCPU_ARM7)
-				return nds.VCount;
-			break;
-			// This is hacked due to the only current 3D core
-			case 0x04000600:
-            {
-				u32 gxstat =(2|(MMU.gfxfifo.hits_count<<16)|
-							(MMU.gfxfifo.full<<24)|
-							(MMU.gfxfifo.empty<<25)|
-							(MMU.gfxfifo.half<<26)|
-							(MMU.gfxfifo.irq<<30));
-				return	gxstat;
-            }
-			#ifdef _3DRENDERING
-			case 0x04000640:
-			case 0x04000644:
-			case 0x04000648:
-			case 0x0400064C:
-			case 0x04000650:
-			case 0x04000654:
-			case 0x04000658:
-			case 0x0400065C:
-			case 0x04000660:
-			case 0x04000664:
-			case 0x04000668:
-			case 0x0400066C:
-			case 0x04000670:
-			case 0x04000674:
-			case 0x04000678:
-			case 0x0400067C:
-			{
-				////LOG("4000640h..67Fh - CLIPMTX_RESULT - Read Current Clip Coordinates Matrix (R)");
-				return gpu3D->NDS_3D_GetClipMatrix ((adr-0x04000640)/4);
-			}
-			case 0x04000680:
-			case 0x04000684:
-			case 0x04000688:
-			case 0x0400068C:
-			case 0x04000690:
-			case 0x04000694:
-			case 0x04000698:
-			case 0x0400069C:
-			case 0x040006A0:
-			{
-				////LOG("4000680h..6A3h - VECMTX_RESULT - Read Current Directional Vector Matrix (R)");
-				return gpu3D->NDS_3D_GetDirectionalMatrix ((adr-0x04000680)/4);
-			}
+			/* Returns data from DTCM (ARM9 only) */
+			return T1ReadLong(ARM9Mem.ARM9_DTCM, adr & 0x3FFF);
+		}
+#endif
+		if(adr<0x02000000) 
+		{
+			//printlog("MMU ITCM (32) Read %08X: %08X\n", adr, T1ReadLong(ARM9Mem.ARM9_ITCM, adr&0x7FFF));
+			return T1ReadLong(ARM9Mem.ARM9_ITCM, adr&0x7FFF);
+		}
+		
+		#ifdef CFLASH_EMU
+		// CFlash reading, Mic
+		if ((adr>=0x9000000)&&(adr<0x9900000))
+		   return (unsigned long)cflash_read(adr);
+		#endif
 
-			case 0x4000604:
+		adr &= 0x0FFFFFFF;
+		if((adr >> 24) == 4)
+		{
+			/* Adress is an IO register */
+			switch(adr)
 			{
-				return (gpu3D->NDS_3D_GetNumPolys()&2047) | ((gpu3D->NDS_3D_GetNumVertex()&8191) << 16);
-				//LOG ("read32 - RAM_COUNT -> 0x%X", ((u32 *)(MMU.MMU_MEM[proc][(adr>>20)&0xFF]))[(adr&MMU.MMU_MASK[proc][(adr>>20)&0xFF])>>2]);
-			}
-			#endif
-			case REG_IME :
-				return MMU.reg_IME[proc];
-			case REG_IE :
-				return MMU.reg_IE[proc];
-			case REG_IF :
-				return MMU.reg_IF[proc];
-			case REG_IPCFIFORECV :
-			{
-				u16 IPCFIFO_CNT = T1ReadWord(MMU.MMU_MEM[proc][0x40], 0x184);
-				if(IPCFIFO_CNT&0x8000)
+				case REG_DISPx_VCOUNT:
+				break;
+				// This is hacked due to the only current 3D core
+				case 0x04000600:
 				{
-				//execute = FALSE;
-				u32 fifonum = IPCFIFO+proc;
-				u32 val = FIFOValue(MMU.fifos + fifonum);
-				u32 remote = (proc+1) & 1;
-				u16 IPCFIFO_CNT_remote = T1ReadWord(MMU.MMU_MEM[remote][0x40], 0x184);
-				IPCFIFO_CNT |= (MMU.fifos[fifonum].empty<<8) | (MMU.fifos[fifonum].full<<9) | (MMU.fifos[fifonum].error<<14);
-				IPCFIFO_CNT_remote |= (MMU.fifos[fifonum].empty) | (MMU.fifos[fifonum].full<<1);
-				T1WriteWord(MMU.MMU_MEM[proc][0x40], 0x184, IPCFIFO_CNT);
-				T1WriteWord(MMU.MMU_MEM[remote][0x40], 0x184, IPCFIFO_CNT_remote);
-				if ((MMU.fifos[fifonum].empty) && (IPCFIFO_CNT & BIT(2)))
-					NDS_makeInt(remote,17) ; /* remote: SEND FIFO EMPTY */
-				return val;
+					gxstat =(2|(MMU.gfxfifo.hits_count<<16)|
+								(MMU.gfxfifo.full<<24)|
+								(MMU.gfxfifo.empty<<25)|
+								(MMU.gfxfifo.half<<26)|
+								(MMU.gfxfifo.irq<<30));
+					return	gxstat;
 				}
-			}
-			return 0;
-                        case REG_TM0CNTL :
-                        case REG_TM1CNTL :
-                        case REG_TM2CNTL :
-                        case REG_TM3CNTL :
-			{
-				u32 val = T1ReadWord(MMU.MMU_MEM[proc][0x40], (adr + 2) & 0xFFF);
-				return MMU.timer[proc][(adr&0xF)>>2] | (val<<16);
-			}	
-			/*
-			case 0x04000640 :	// TODO (clear): again, ??? 
-				//LOG("read proj\r\n");
-			return 0;
-			case 0x04000680 :
-				//LOG("read roat\r\n");
-			return 0;
-			case 0x04000620 :
-				//LOG("point res\r\n");
-			return 0;
-			*/
-			//these aren't readable.
-			//note: ratatouille stage 3 begins testing this.. it will write a 256, then read it, and if it reads back a 256, the 3d display will be scrolled invisibly. it needs to read a 0 to cause an unscrolled 3d display.
-			case REG_DISPA_BG0HOFS: case REG_DISPA_BG1HOFS: case REG_DISPA_BG2HOFS: case REG_DISPA_BG3HOFS:
-			case REG_DISPB_BG0HOFS: case REG_DISPB_BG1HOFS: case REG_DISPB_BG2HOFS: case REG_DISPB_BG3HOFS:
-				return 0;
-			
-            case REG_GCDATAIN:
-			{
-                    u32 val=0;
-                    
-					if(MMU.dscard[ARMCPU_ARM9].transfer_count == 0)
-						return 0;
+				#ifdef _3DRENDERING
+				case 0x04000640:
+				case 0x04000644:
+				case 0x04000648:
+				case 0x0400064C:
+				case 0x04000650:
+				case 0x04000654:
+				case 0x04000658:
+				case 0x0400065C:
+				case 0x04000660:
+				case 0x04000664:
+				case 0x04000668:
+				case 0x0400066C:
+				case 0x04000670:
+				case 0x04000674:
+				case 0x04000678:
+				case 0x0400067C:
+				{
+					return gpu3D->NDS_3D_GetClipMatrix ((adr-0x04000640)/4);
+				}
+				case 0x04000680:
+				case 0x04000684:
+				case 0x04000688:
+				case 0x0400068C:
+				case 0x04000690:
+				case 0x04000694:
+				case 0x04000698:
+				case 0x0400069C:
+				case 0x040006A0:
+				{
+					return gpu3D->NDS_3D_GetDirectionalMatrix ((adr-0x04000680)/4);
+				}
 
-					switch(MEM_8(MMU.MMU_MEM[ARMCPU_ARM9], REG_GCCMDOUT))
+				case 0x4000604:
+				{
+					return (gpu3D->NDS_3D_GetNumPolys()&2047) | ((gpu3D->NDS_3D_GetNumVertex()&8191) << 16);
+				}
+				#endif
+				case REG_IME :
+					return MMU.reg_IME[proc];
+				case REG_IE :
+					return MMU.reg_IE[proc];
+				case REG_IF :
+					return MMU.reg_IF[proc];
+				case REG_IPCFIFORECV :
+				{
+					IPCFIFO_CNT = T1ReadWord(MMU.MMU_MEM[proc][0x40], 0x184);
+					if(IPCFIFO_CNT&0x8000)
 					{
-						/* Dummy */
-						case 0x9F:
-							{
-								val = 0xFFFFFFFF;
-							}
-							break;
+						//execute = FALSE;
+						fifonum = IPCFIFO+proc;
+						val = FIFOValue(MMU.fifos + fifonum);
+						remote = (proc+1) & 1;
+						IPCFIFO_CNT_remote = T1ReadWord(MMU.MMU_MEM[remote][0x40], 0x184);
+						IPCFIFO_CNT |= (MMU.fifos[fifonum].empty<<8) | (MMU.fifos[fifonum].full<<9) | (MMU.fifos[fifonum].error<<14);
+						IPCFIFO_CNT_remote |= (MMU.fifos[fifonum].empty) | (MMU.fifos[fifonum].full<<1);
+						T1WriteWord(MMU.MMU_MEM[proc][0x40], 0x184, IPCFIFO_CNT);
+						T1WriteWord(MMU.MMU_MEM[remote][0x40], 0x184, IPCFIFO_CNT_remote);
+						if ((MMU.fifos[fifonum].empty) && (IPCFIFO_CNT & BIT(2)))
+							NDS_makeInt(remote,17) ; /* remote: SEND FIFO EMPTY */
+						return val;
+					}
+				}
+				return 0;
+				case REG_TM0CNTL :
+				case REG_TM1CNTL :
+				case REG_TM2CNTL :
+				case REG_TM3CNTL :
+				{
+					val = T1ReadWord(MMU.MMU_MEM[proc][0x40], (adr + 2) & 0xFFF);
+					return MMU.timer[proc][(adr&0xF)>>2] | (val<<16);
+				}	
+				//these aren't readable.
+				//note: ratatouille stage 3 begins testing this.. it will write a 256, then read it, and if it reads back a 256, the 3d display will be scrolled invisibly. it needs to read a 0 to cause an unscrolled 3d display.
+				case REG_DISPA_BG0HOFS: case REG_DISPA_BG1HOFS: case REG_DISPA_BG2HOFS: case REG_DISPA_BG3HOFS:
+				case REG_DISPB_BG0HOFS: case REG_DISPB_BG1HOFS: case REG_DISPB_BG2HOFS: case REG_DISPB_BG3HOFS:
+					return 0;
+				case REG_GCDATAIN:
+				{
+						val=0;
+						
+						if(MMU.dscard[ARMCPU_ARM9].transfer_count == 0)
+							return 0;
 
-						/* Data read */
-						case 0x00:
-						case 0xB7:
+						switch(MEM_8(MMU.MMU_MEM[ARMCPU_ARM9], REG_GCCMDOUT))
+						{
+							/* Dummy */
+							case 0x9F:
+								val = 0xFFFFFFFF;
+							break;
+							/* Data read */
+							case 0x00:
+							case 0xB7:
 							{
 								/* TODO: prevent read if the address is out of range */
 								/* Make sure any reads below 0x8000 redirect to 0x8000+(adr%0x1FF) as on real cart */
@@ -902,43 +889,173 @@ u32 FASTCALL MMU_read32(u32 proc, u32 adr)
 								val = T1ReadLong(MMU.CART_ROM, MMU.dscard[ARMCPU_ARM9].adress);
 							}
 							break;
-
-						/* Get ROM chip ID */
-						case 0x90:
-						case 0xB8:
-							{
+							/* Get ROM chip ID */
+							case 0x90:
+							case 0xB8:
 								/* TODO */
 								val = 0x00000000;
-							}
 							break;
-					}
+						}
 
-                    if(MMU.dscard[proc].adress)
-						val = T1ReadLong(MMU.CART_ROM, MMU.dscard[proc].adress);
+						if(MMU.dscard[proc].adress)
+							val = T1ReadLong(MMU.CART_ROM, MMU.dscard[proc].adress);
 
-					MMU.dscard[proc].adress += 4;	/* increment adress */
-	
-					MMU.dscard[proc].transfer_count--;	/* update transfer counter */
-					if(MMU.dscard[proc].transfer_count) /* if transfer is not ended */
-						return val;	/* return data */
-					else	/* transfer is done */
-                    {                                                       
-						T1WriteLong(MMU.MMU_MEM[proc][(REG_GCROMCTRL >> 20) & 0xff], REG_GCROMCTRL & 0xfff, T1ReadLong(MMU.MMU_MEM[proc][(REG_GCROMCTRL >> 20) & 0xff], REG_GCROMCTRL & 0xfff) & ~(0x00800000 | 0x80000000));
-							/* = 0x7f7fffff */
+						MMU.dscard[proc].adress += 4;	/* increment adress */
 		
-							/* if needed, throw irq for the end of transfer */
-						if(T1ReadWord(MMU.MMU_MEM[proc][(REG_AUXSPICNT >> 20) & 0xff], REG_AUXSPICNT & 0xfff) & 0x4000)
-							NDS_makeInt(proc,19);
-		
-						return val;
-					}
-			}
-
-			default :
+						MMU.dscard[proc].transfer_count--;	/* update transfer counter */
+						if(MMU.dscard[proc].transfer_count) /* if transfer is not ended */
+							return val;	/* return data */
+						else	/* transfer is done */
+						{                                                       
+							T1WriteLong(MMU.MMU_MEM[proc][(REG_GCROMCTRL >> 20) & 0xff], REG_GCROMCTRL & 0xfff, T1ReadLong(MMU.MMU_MEM[proc][(REG_GCROMCTRL >> 20) & 0xff], REG_GCROMCTRL & 0xfff) & ~(0x00800000 | 0x80000000));
+								/* = 0x7f7fffff */
+			
+								/* if needed, throw irq for the end of transfer */
+							if(T1ReadWord(MMU.MMU_MEM[proc][(REG_AUXSPICNT >> 20) & 0xff], REG_AUXSPICNT & 0xfff) & 0x4000)
+								NDS_makeInt(proc,19);
+			
+							return val;
+						}
+				}
+				default :
 				break;
+			}
+		}
+
+	}
+	else
+	{
+		#ifdef CFLASH_EMU
+		// CFlash reading, Mic
+		if ((adr>=0x9000000)&&(adr<0x9900000))
+		   return (unsigned long)cflash_read(adr);
+		#endif
+
+		adr &= 0x0FFFFFFF;
+		
+		if((adr >> 24) == 4)
+		{
+			/* Adress is an IO register */
+			switch(adr)
+			{
+				case REG_DISPx_VCOUNT:
+					return nds.VCount;
+				break;
+				// This is hacked due to the only current 3D core
+				case 0x04000600:
+				{
+					gxstat =(2|(MMU.gfxfifo.hits_count<<16)|
+								(MMU.gfxfifo.full<<24)|
+								(MMU.gfxfifo.empty<<25)|
+								(MMU.gfxfifo.half<<26)|
+								(MMU.gfxfifo.irq<<30));
+					return	gxstat;
+				}
+				#ifdef _3DRENDERING
+				case 0x04000640:
+				case 0x04000644:
+				case 0x04000648:
+				case 0x0400064C:
+				case 0x04000650:
+				case 0x04000654:
+				case 0x04000658:
+				case 0x0400065C:
+				case 0x04000660:
+				case 0x04000664:
+				case 0x04000668:
+				case 0x0400066C:
+				case 0x04000670:
+				case 0x04000674:
+				case 0x04000678:
+				case 0x0400067C:
+				{
+					return gpu3D->NDS_3D_GetClipMatrix ((adr-0x04000640)/4);
+				}
+				case 0x04000680:
+				case 0x04000684:
+				case 0x04000688:
+				case 0x0400068C:
+				case 0x04000690:
+				case 0x04000694:
+				case 0x04000698:
+				case 0x0400069C:
+				case 0x040006A0:
+				{
+					return gpu3D->NDS_3D_GetDirectionalMatrix ((adr-0x04000680)/4);
+				}
+
+				case 0x4000604:
+				{
+					return (gpu3D->NDS_3D_GetNumPolys()&2047) | ((gpu3D->NDS_3D_GetNumVertex()&8191) << 16);
+				}
+				#endif
+				case REG_IME :
+					return MMU.reg_IME[proc];
+				case REG_IE :
+					return MMU.reg_IE[proc];
+				case REG_IF :
+					return MMU.reg_IF[proc];
+				case REG_IPCFIFORECV :
+				{
+					IPCFIFO_CNT = T1ReadWord(MMU.MMU_MEM[proc][0x40], 0x184);
+					if(IPCFIFO_CNT&0x8000)
+					{
+						//execute = FALSE;
+						fifonum = IPCFIFO+proc;
+						val = FIFOValue(MMU.fifos + fifonum);
+						remote = (proc+1) & 1;
+						IPCFIFO_CNT_remote = T1ReadWord(MMU.MMU_MEM[remote][0x40], 0x184);
+						IPCFIFO_CNT |= (MMU.fifos[fifonum].empty<<8) | (MMU.fifos[fifonum].full<<9) | (MMU.fifos[fifonum].error<<14);
+						IPCFIFO_CNT_remote |= (MMU.fifos[fifonum].empty) | (MMU.fifos[fifonum].full<<1);
+						T1WriteWord(MMU.MMU_MEM[proc][0x40], 0x184, IPCFIFO_CNT);
+						T1WriteWord(MMU.MMU_MEM[remote][0x40], 0x184, IPCFIFO_CNT_remote);
+						if ((MMU.fifos[fifonum].empty) && (IPCFIFO_CNT & BIT(2)))
+							NDS_makeInt(remote,17) ; /* remote: SEND FIFO EMPTY */
+					return val;
+					}
+				}
+				return 0;
+				case REG_TM0CNTL :
+				case REG_TM1CNTL :
+				case REG_TM2CNTL :
+				case REG_TM3CNTL :
+				{
+					val = T1ReadWord(MMU.MMU_MEM[proc][0x40], (adr + 2) & 0xFFF);
+					return MMU.timer[proc][(adr&0xF)>>2] | (val<<16);
+				}	
+				//these aren't readable.
+				//note: ratatouille stage 3 begins testing this.. it will write a 256, then read it, and if it reads back a 256, the 3d display will be scrolled invisibly. it needs to read a 0 to cause an unscrolled 3d display.
+				case REG_DISPA_BG0HOFS: case REG_DISPA_BG1HOFS: case REG_DISPA_BG2HOFS: case REG_DISPA_BG3HOFS:
+				case REG_DISPB_BG0HOFS: case REG_DISPB_BG1HOFS: case REG_DISPB_BG2HOFS: case REG_DISPB_BG3HOFS:
+					return 0;
+				case REG_GCDATAIN:
+				{
+						val=0;
+
+						if(MMU.dscard[proc].adress)
+							val = T1ReadLong(MMU.CART_ROM, MMU.dscard[proc].adress);
+
+						MMU.dscard[proc].adress += 4;	/* increment adress */
+		
+						MMU.dscard[proc].transfer_count--;	/* update transfer counter */
+						if(MMU.dscard[proc].transfer_count) /* if transfer is not ended */
+							return val;	/* return data */
+						else	/* transfer is done */
+						{                                                       
+							T1WriteLong(MMU.MMU_MEM[proc][(REG_GCROMCTRL >> 20) & 0xff], REG_GCROMCTRL & 0xfff, T1ReadLong(MMU.MMU_MEM[proc][(REG_GCROMCTRL >> 20) & 0xff], REG_GCROMCTRL & 0xfff) & ~(0x00800000 | 0x80000000));
+							/* if needed, throw irq for the end of transfer */
+							if(T1ReadWord(MMU.MMU_MEM[proc][(REG_AUXSPICNT >> 20) & 0xff], REG_AUXSPICNT & 0xfff) & 0x4000)
+								NDS_makeInt(proc,19);
+			
+							return val;
+						}
+				}
+				default :
+				break;
+			}
 		}
 	}
-	
+
 	/* Returns data from memory */
 	return T1ReadLong(MMU.MMU_MEM[proc][(adr >> 20) & 0xFF], adr & MMU.MMU_MASK[proc][(adr >> 20) & 0xFF]);
 }
@@ -3576,7 +3693,7 @@ void FASTCALL MMU_doDMA(u32 proc, u32 num)
 {
 	u32 src = DMASrc[proc][num];
 	u32 dst = DMADst[proc][num];
-        u32 taille;
+	u32 taille;
 
 	if(src==dst)
 	{
@@ -3585,14 +3702,14 @@ void FASTCALL MMU_doDMA(u32 proc, u32 num)
 	}
 	
 	if((!(MMU.DMACrt[proc][num]&(1<<31)))&&(!(MMU.DMACrt[proc][num]&(1<<25))))
-	{       /* not enabled and not to be repeated */
+	{
+		/* not enabled and not to be repeated */
 		MMU.DMAStartTime[proc][num] = 0;
 		MMU.DMACycle[proc][num] = 0;
 		//MMU.DMAing[proc][num] = FALSE;
 		return;
 	}
-	
-	
+
 	/* word count */
 	taille = (MMU.DMACrt[proc][num]&0xFFFF);
 	
@@ -3611,10 +3728,6 @@ void FASTCALL MMU_doDMA(u32 proc, u32 num)
 	MMU.DMACycle[proc][num] = taille + nds.cycles;
 	MMU.DMAing[proc][num] = TRUE;
 	MMU.CheckDMAs |= (1<<(num+(proc<<2)));
-	
-	/*DMA_LOG("proc %d, dma %d src %08X dst %08X start %d taille %d repeat %s %08X\r\n",
-		proc, num, src, dst, MMU.DMAStartTime[proc][num], taille,
-		(MMU.DMACrt[proc][num]&(1<<25))?"on":"off",MMU.DMACrt[proc][num]);*/
 	
 	if(!(MMU.DMACrt[proc][num]&(1<<25)))
 		MMU.DMAStartTime[proc][num] = 0;
@@ -3730,8 +3843,6 @@ void FASTCALL MMU_write32_acl(u32 proc, u32 adr, u32 val)
 	MMU_write32(proc,adr,val) ;
 }
 #endif
-
-
 
 #ifdef PROFILE_MEMORY_ACCESS
 
