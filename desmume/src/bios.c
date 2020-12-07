@@ -312,6 +312,12 @@ u32 wait4IRQ(armcpu_t* cpu)
      return 1;
 }
 
+static u32 sleep(armcpu_t* cpu)
+{
+	MMU_write8(cpu->proc_ID, 0x04000301, 0xC0);
+	return 1;
+}
+
 u32 devide(armcpu_t* cpu)
 {
      s32 num = (s32)cpu->R[0];
@@ -1131,7 +1137,7 @@ u32 (* ARM7_swi_tab[32])(armcpu_t* cpu)={
          intrWaitARM,          // 0x04
          waitVBlankARM,        // 0x05
          wait4IRQ,             // 0x06
-         wait4IRQ,             // 0x07
+         sleep,             // 0x07
          SoundBias,            // 0x08
          devide,               // 0x09
          bios_nop,             // 0x0A
