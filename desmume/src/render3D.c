@@ -18,6 +18,8 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#ifdef _3DRENDERING
+
 #include "render3D.h"
 
 char NDS_nullFunc1		(void){ return 1; }
@@ -104,3 +106,5 @@ void NDS_3D_SetDriver (int core3DIndex)
 {
 	gpu3D = core3DList[core3DIndex];
 }
+
+#endif

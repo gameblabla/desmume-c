@@ -2072,6 +2072,7 @@ void GPU_ligne(NDS_Screen * screen, u16 l)
 				i16 = item->BGs[i];
 				if (gpu->LayersEnable[i16])
 				{
+					#ifdef _3DRENDERING
 					if (gpu->core == GPU_MAIN)
 					{
 						if (i16 == 0 && dispCnt->BG0_3D)
@@ -2080,6 +2081,7 @@ void GPU_ligne(NDS_Screen * screen, u16 l)
 							continue;
 						}
 					}
+					#endif
 					modeRender[dispCnt->BG_Mode][i16](gpu, i16, l, dst);
 				}
 			}
@@ -2142,7 +2144,9 @@ void GPU_ligne(NDS_Screen * screen, u16 l)
 						if(capcnt->Source_A == 1)	/* capture 3D only */
 						{
 							u16 cap3DLine[256];	/* temp buffer for 3D line reading */
+							#ifdef _3DRENDERING
 							gpu3D->NDS_3D_GetLine (l, cap3DLine);
+							#endif
 							for(i = 0; i < (capx<<1); i++) T1WriteWord(capDst, i, cap3DLine[i]);	/* copy this line to buffer */
 						}
 						else	/* capture all screen (BG + OBJ + 3D) */

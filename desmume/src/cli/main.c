@@ -59,11 +59,12 @@ SoundInterface_struct *SNDCoreList[] = {
   NULL
 };
 
+#ifdef _3DRENDERING
 GPU3DInterface *core3DList[] = {
 //&gpu3D_opengl_collector
 &gpu3DNull
 };
-
+#endif
 
 /* Our keyboard config is different because of the directional keys */
 const u16 cli_kb_cfg[NB_KEYS] =

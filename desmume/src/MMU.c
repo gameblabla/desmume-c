@@ -33,7 +33,9 @@
 #include "cflash.h"
 #include "cp15.h"
 #include "registers.h"
+#ifdef _3DRENDERING
 #include "render3D.h"
+#endif
 
 #define ROM_MASK 3
 
@@ -684,11 +686,12 @@ u16 FASTCALL MMU_read16(u32 proc, u32 adr)
 				if(proc==ARMCPU_ARM7)
 				return nds.VCount;
 			break;
+			#ifdef _3DRENDERING
 			case 0x04000604:
 				return (gpu3D->NDS_3D_GetNumPolys()&2047);
 			case 0x04000606:
 				return (gpu3D->NDS_3D_GetNumVertex()&8191);
-
+			#endif
 			case REG_IPCFIFORECV :               /* TODO (clear): ??? */
 				//printlog("Stopped IPCFIFORECV\n");
 				execute = FALSE;
@@ -778,7 +781,7 @@ u32 FASTCALL MMU_read32(u32 proc, u32 adr)
 							(MMU.gfxfifo.irq<<30));
 				return	gxstat;
             }
-
+			#ifdef _3DRENDERING
 			case 0x04000640:
 			case 0x04000644:
 			case 0x04000648:
@@ -818,7 +821,7 @@ u32 FASTCALL MMU_read32(u32 proc, u32 adr)
 				return (gpu3D->NDS_3D_GetNumPolys()&2047) | ((gpu3D->NDS_3D_GetNumVertex()&8191) << 16);
 				//LOG ("read32 - RAM_COUNT -> 0x%X", ((u32 *)(MMU.MMU_MEM[proc][(adr>>20)&0xFF]))[(adr&MMU.MMU_MASK[proc][(adr>>20)&0xFF])>>2]);
 			}
-			
+			#endif
 			case REG_IME :
 				return MMU.reg_IME[proc];
 			case REG_IE :
@@ -1384,6 +1387,7 @@ void FASTCALL MMU_write16(u32 proc, u32 adr, u16 val)
 
 	if((adr >> 24) == 4)
 	{
+		#ifdef _3DRENDERING
 		if(adr >= 0x04000380 && adr <= 0x040003BE)
 		{
 			//toon table
@@ -1391,7 +1395,9 @@ void FASTCALL MMU_write16(u32 proc, u32 adr, u16 val)
 			gpu3D->NDS_3D_UpdateToonTable(&((MMU.MMU_MEM[proc][0x40]))[(0x380)]);
 		}
 		/* Adress is an IO register */
-		else switch(adr)
+		else
+		#endif
+		switch(adr)
 		{
 			case REG_DISPA_DISPSTAT:
 				break;
@@ -1399,6 +1405,7 @@ void FASTCALL MMU_write16(u32 proc, u32 adr, u16 val)
 				if(proc == ARMCPU_ARM9)
 					return;
 			break;
+			#ifdef _3DRENDERING
 			case 0x0400035C:
 			{
 				((u16 *)(MMU.MMU_MEM[proc][0x40]))[0x35C>>1] = val;
@@ -1435,7 +1442,7 @@ void FASTCALL MMU_write16(u32 proc, u32 adr, u16 val)
 				}
 				return;
 			}
-
+			#endif
 			case REG_DISPA_BLDCNT: 	 
 				if(proc == ARMCPU_ARM9) GPU_setBLDCNT(MainScreen.gpu,val) ; 	 
 				break ; 	 
@@ -2046,6 +2053,7 @@ void FASTCALL MMU_write32(u32 proc, u32 adr, u32 val)
 
 	if((adr>>24)==4)
 	{
+		#ifdef _3DRENDERING
 		if (adr >= 0x04000400 && adr < 0x04000440)
 		{
 			// Geometry commands (aka Dislay Lists) - Parameters:X
@@ -2061,13 +2069,16 @@ void FASTCALL MMU_write32(u32 proc, u32 adr, u32 val)
 			((u32 *)(MMU.MMU_MEM[proc][0x40]))[(adr-0x04000000)>>2] = val;
 			gpu3D->NDS_3D_UpdateToonTable(&((MMU.MMU_MEM[proc][0x40]))[(0x380)]);
 		}
-		else switch(adr)
+		else
+		#endif
+		switch(adr)
 		{
 			case REG_DISPA_DISPSTAT:
 				break;
 
 			case REG_DISPx_VCOUNT:
 			break;
+			#ifdef _3DRENDERING
 			// Alpha test reference value - Parameters:1
 			case 0x04000340:
 			{
@@ -2458,7 +2469,7 @@ void FASTCALL MMU_write32(u32 proc, u32 adr, u32 val)
 				}
 				return;
 			}
-
+			#endif
 			case 0x04000600:
 			{
 				MMU.gfxfifo.irq=(val>>30)&3;

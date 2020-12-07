@@ -183,7 +183,9 @@ void NDS_DeInit(void) {
      SPU_DeInit();
      Screen_DeInit();
      MMU_DeInit();
+     #ifdef _3DRENDERING
 	 gpu3D->NDS_3D_Close();
+	 #endif
 }
 
 BOOL NDS_SetROM(u8 * rom, u32 mask)
@@ -539,7 +541,9 @@ void NDS_Reset( void)
 
    GPU_Reset(MainScreen.gpu, 0);
    GPU_Reset(SubScreen.gpu, 1);
+   #ifdef _3DRENDERING
    gpu3D->NDS_3D_Reset();
+   #endif
    SPU_Reset();
 
    execute = oldexecute;

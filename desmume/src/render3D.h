@@ -17,7 +17,7 @@
     along with DeSmuME; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
+#ifdef _3DRENDERING
 #ifndef GPU_3D
 #define GPU_3D
 
@@ -142,4 +142,5 @@ extern GPU3DInterface *gpu3D;
 
 void NDS_3D_SetDriver (int core3DIndex);
 
+#endif
 #endif
