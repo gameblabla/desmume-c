@@ -98,11 +98,14 @@ int SPU_ChangeSoundCore(int coreid, int buffersize)
    SPU->bufsize = buffersize;
 
    // So which core do we want?
-   if (coreid == SNDCORE_DEFAULT)
-      coreid = 0; // Assume we want the first one
+   /*if (coreid == SNDCORE_DEFAULT)
+      coreid = 0; // Assume we want the first one*/
+      
+	SNDCore = SNDCoreList[0];
+	SNDCore->Init(buffersize * 2);
 
    // Go through core list and find the id
-   for (i = 0; SNDCoreList[i] != NULL; i++)
+   /*for (i = 0; SNDCoreList[i] != NULL; i++)
    {
       if (SNDCoreList[i]->id == coreid)
       {
@@ -123,7 +126,7 @@ int SPU_ChangeSoundCore(int coreid, int buffersize)
       // Since it failed, instead of it being fatal, we'll just use the dummy
       // core instead
       SNDCore = &SNDDummy;
-   }
+   }*/
 
    return 0;
 }
@@ -1147,7 +1150,7 @@ void SPU_Emulate(void)
 // Dummy Sound Interface
 //////////////////////////////////////////////////////////////////////////////
 
-int SNDDummyInit(int buffersize);
+/*int SNDDummyInit(int buffersize);
 void SNDDummyDeInit();
 void SNDDummyUpdateAudio(s16 *buffer, u32 num_samples);
 u32 SNDDummyGetAudioSpace();
@@ -1209,7 +1212,7 @@ void SNDDummyUnMuteAudio()
 
 void SNDDummySetVolume(int volume)
 {
-}
+}*/
 
 //////////////////////////////////////////////////////////////////////////////
 // WAV Write Interface

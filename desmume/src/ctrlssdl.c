@@ -217,10 +217,7 @@ process_ctrls_events( u16 *keypad,
 					key |= 2048;
 				break;
 				case SDLK_PAGEUP:
-					mouse_mode = 1;
-				break;
-				case SDLK_PAGEDOWN:
-					mouse_mode = 0;
+					mouse_mode ^= 1;
 				break;
 				default:
 				break;

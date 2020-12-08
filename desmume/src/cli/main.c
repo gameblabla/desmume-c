@@ -47,9 +47,7 @@ SDL_Surface *rl_screen;
 SDL_Surface *cursor_sdl;
 
 SoundInterface_struct *SNDCoreList[] = {
-  &SNDDummy,
-  &SNDSDL,
-  NULL
+  &SNDSDL
 };
 
 #ifdef _3DRENDERING

@@ -43,10 +43,16 @@
  *
  */
 //#define PROFILE_MEMORY_ACCESS 1
-#define EARLY_MEMORY_ACCESS 1
 
+#ifdef FASTBUILD
+//#define EARLY_MEMORY_ACCESS 1
 #define INTERNAL_DTCM_READ 1
 #define INTERNAL_DTCM_WRITE 1
+#else
+#define EARLY_MEMORY_ACCESS 1
+#define INTERNAL_DTCM_READ 1
+#define INTERNAL_DTCM_WRITE 1
+#endif
 
 //#define LOG_CARD
 //#define LOG_GPU
@@ -171,7 +177,7 @@ u32 MMU_ARM7_WAIT32[16]={
 };
 
 void MMU_Init(void) {
-	int i;
+	uint_fast8_t i;
 
 	//LOG("MMU init\n");
 	//printlog("MMU init\n");
@@ -180,11 +186,11 @@ void MMU_Init(void) {
 
 	MMU.CART_ROM = MMU.UNUSED_RAM;
 
-        for(i = 0x80; i<0xA0; ++i)
-        {
-           MMU_ARM9_MEM_MAP[i] = MMU.CART_ROM;
-           MMU_ARM7_MEM_MAP[i] = MMU.CART_ROM;
-        }
+	for(i = 0x80; i<0xA0; ++i)
+	{
+		MMU_ARM9_MEM_MAP[i] = MMU.CART_ROM;
+		MMU_ARM7_MEM_MAP[i] = MMU.CART_ROM;
+	}
 
 	MMU.MMU_MEM[0] = MMU_ARM9_MEM_MAP;
 	MMU.MMU_MEM[1] = MMU_ARM7_MEM_MAP;
