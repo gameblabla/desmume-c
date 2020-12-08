@@ -24,18 +24,19 @@
 
 #define DEADZONE_JOYSTICK 8192
 
+static int_fast16_t scaled_x;
+static int_fast16_t scaled_y;
+
 #if (defined(SDL_SWIZZLEBGR) || defined(GKD350H))
 extern SDL_Surface* sdl_screen;
 int_fast16_t emulated_touch_x = 82;
 int_fast16_t emulated_touch_y = 122;
-static int_fast16_t scaled_x = 0;
-static int_fast16_t scaled_y = 0;
 uint_fast8_t mouse_mode = 0;
 #ifdef GKD350H
-uint_fast8_t MOUSE_X_OFFSET = 80;
-uint_fast8_t MOUSE_Y_OFFSET = 120;
-float RESOLUTION_WIDTH = 160.0f;
-float RESOLUTION_HEIGHT = 120.0f;
+uint_fast8_t MOUSE_X_OFFSET;
+uint_fast8_t MOUSE_Y_OFFSET;
+float RESOLUTION_WIDTH;
+float RESOLUTION_HEIGHT;
 extern void Set_Offset(void);
 extern uint_fast8_t fullscreen_option;
 #else
@@ -125,7 +126,6 @@ process_ctrls_events( u16 *keypad,
                       void (*external_videoResizeFn)( u16 width, u16 height),
                       float nds_screen_size_ratio)
 {
-	u16 key = 0;
 	int cause_quit = 0;
 	SDL_Event event;
 
@@ -161,7 +161,12 @@ process_ctrls_events( u16 *keypad,
 			switch(event.key.keysym.sym)
 			{
 				case SDLK_LCTRL:
-				if (mouse_mode == 0) key |= 1;
+					#if defined(SDL_SWIZZLEBGR) || defined(GKD350H)
+					if (mouse_mode == 0) 
+					#endif
+					{
+						*keypad |= 1;
+					}
 				break;
 				case SDLK_LALT:
 					#ifdef GKD350H
@@ -171,13 +176,15 @@ process_ctrls_events( u16 *keypad,
 						if (fullscreen_option > 2) fullscreen_option = 0;
 						Set_Offset();
 					}
+					#endif
+					#if defined(SDL_SWIZZLEBGR) || defined(GKD350H)
 					else if (keys[SDLK_TAB])
 					{
 						mouse_mode ^= 1;
 					}
 					else
 					#endif
-					key |= 2;
+					*keypad |= 2;
 				break;
 				case SDLK_ESCAPE:
 					#ifdef GKD350H
@@ -187,87 +194,91 @@ process_ctrls_events( u16 *keypad,
 					}
 					else 
 					#endif
-					key |= 4;
+					*keypad |= 4;
 				break;
 				case SDLK_RETURN:
-					key |= 8;
+					*keypad |= 8;
 				break;
 				case SDLK_LEFT:
-					key |= 32;
+					*keypad |= 32;
 				break;
 				case SDLK_RIGHT:
-					key |= 16;
+					*keypad |= 16;
 				break;
 				case SDLK_UP:
-					key |= 64;
+					*keypad |= 64;
 				break;
 				case SDLK_DOWN:
-					key |= 128;
+					*keypad |= 128;
 				break;
 				case SDLK_BACKSPACE:
-					key |= 256;
+					*keypad |= 256;
 				break;
 				case SDLK_TAB:
-					key |= 512;
+					*keypad |= 512;
 				break;
 				case SDLK_LSHIFT:
-					key |= 1024;
+					*keypad |= 1024;
 				break;
 				case SDLK_SPACE:
-					key |= 2048;
+					*keypad |= 2048;
 				break;
+				#if defined(SDL_SWIZZLEBGR) || defined(GKD350H)
 				case SDLK_PAGEUP:
 					mouse_mode ^= 1;
 				break;
+				#endif
 				default:
 				break;
 			}
-            ADD_KEY( *keypad, key );
             break;
 
           case SDL_KEYUP:
 			switch(event.key.keysym.sym)
 			{
 				case SDLK_LCTRL:
+				#if defined(SDL_SWIZZLEBGR) || defined(GKD350H)
 				if (mouse_mode)
 				{
 					mouse.click = 1;
 					mouse.down = 0;
 				}
-				else key |= 1;
+				else
+				#endif
+				*keypad &= ~1;
 				break;
 				case SDLK_LALT:
-					key |= 2;
+					*keypad &= ~2;
 				break;
 				case SDLK_ESCAPE:
-					key |= 4;
+					*keypad &= ~4;
 				break;
 				case SDLK_RETURN:
-					key |= 8;
+					*keypad &= ~8;
 				break;
 				case SDLK_LEFT:
-					key |= 32;
+					*keypad &= ~32;
 				break;
 				case SDLK_RIGHT:
-					key |= 16;
+					*keypad &= ~16;
 				break;
 				case SDLK_UP:
-					key |= 64;
+					*keypad &= ~64;
 				break;
 				case SDLK_DOWN:
-					key |= 128;
+					*keypad &= ~128;
 				break;
 				case SDLK_BACKSPACE:
-					key |= 256;
+					*keypad &= ~256;
 				break;
 				case SDLK_TAB:
-					key |= 512;
+					*keypad &= ~512;
 				break;
 				case SDLK_LSHIFT:
-					key |= 1024;
+					*keypad &= ~1024;
 				break;
 				case SDLK_SPACE:
-					key |= 2048;
+					*keypad &= ~2048;
 				break;
 				case SDLK_HOME:
 					cause_quit = 1;
@@ -275,9 +286,8 @@ process_ctrls_events( u16 *keypad,
 				default:
 				break;
 			}
-            RM_KEY( *keypad, key );
             break;
-
+			#if defined(SDL_SWIZZLEBGR) || defined(GKD350H)
 			case SDL_JOYAXISMOTION:
 				switch(event.jaxis.axis)
 				{
@@ -291,6 +301,7 @@ process_ctrls_events( u16 *keypad,
 					break;
 				}
 			break;
+			#endif
 		  #if !(defined(SDL_SWIZZLEBGR) || defined(GKD350H))
           case SDL_MOUSEBUTTONDOWN:
             if(event.button.button==1)

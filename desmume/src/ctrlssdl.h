@@ -32,8 +32,6 @@
 
 #include "types.h"
 
-#define ADD_KEY(keypad,key) ( (keypad) |= (key) )
-#define RM_KEY(keypad,key) ( (keypad) &= ~(key) )
 #define KEYMASK_(k)	(1 << (k))
 #define JOY_AXIS_(k)    (((k)+1) << 8)
 
