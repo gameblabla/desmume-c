@@ -712,14 +712,14 @@ static INLINE void renderline_textBG(const GPU * gpu, u8 num, u8 * dst, u32 Y, u
 	u8 *tile, *pal, *line;
 
 	u16 color;
-	u16 xoff   = XBG;
+	u16 xoff;
 	u16 yoff;
 	u16 x      = 0;
 	u16 xfin;
 	u16 mosaic = T1ReadWord((u8 *)&gpu->dispx_st->dispx_MISC.MOSAIC, 0);
 
-	s8 line_dir = 1;
-	u8 pt_xor   = 0;
+	s8 line_dir;
+	u8 pt_xor;
 	u8 * mapinfo;
 	TILEENTRY tileentry;
 
@@ -930,8 +930,8 @@ void rot_tiled_8bit_entry(GPU * gpu, int num, s32 auxX, s32 auxY, int lg, u8 * d
 }
 
 void rot_tiled_16bit_entry(GPU * gpu, int num, s32 auxX, s32 auxY, int lg, u8 * dst, u8 * map, u8 * tile, u8 * pal, int i, u16 H) {
-	u8 palette_entry, palette_set;
-	u16 tileindex, x, y, color;
+	u8 palette_entry;
+	u16 x, y, color;
 	TILEENTRY tileentry;
 
 	if (!tile) return;
@@ -1286,7 +1286,7 @@ void sprite1D(GPU * gpu, u16 l, u8 * dst, u8 * prioTab)
 	struct _DISPCNT * dispCnt = &(gpu->dispx_st)->dispx_DISPCNT.bits;
 	_OAM_ * spriteInfo = (_OAM_ *)(gpu->oam + (nbShow-1));// + 127;
 	u8 block = gpu->sprBoundary;
-	u16 i;
+	uint_fast16_t i;
 	
 	//for(i = 0; i<nbShow; ++i, --spriteInfo)     /* check all sprites */
 #ifdef WORDS_BIGENDIAN
@@ -1307,7 +1307,6 @@ void sprite1D(GPU * gpu, u16 l, u8 * dst, u8 * prioTab)
 		s32 sprX, sprY, x, y, lg;
 		int xdir;
 		u8 prio, * src;
-		u16 i;
 
 		// Check if sprite is disabled before everything
 		if (spriteInfo->RotScale == 2)
@@ -1366,10 +1365,6 @@ void sprite1D(GPU * gpu, u16 l, u8 * dst, u8 * prioTab)
 
 			if(sprX<0)
 			{
-				// If sprite is not in the window
-				if(sprX + fieldX <= 0)
-					continue;
-
 				// Otherwise, is partially visible
 				lg += sprX;
 				realX -= sprX*dx;
@@ -1572,7 +1567,7 @@ void sprite2D(GPU * gpu, u16 l, u8 * dst, u8 * prioTab)
 		int xdir;
 		u8 prio, * src;
 		//u16 * pal;
-		u16 i,j;
+		u16 i;
 
 		// Check if sprite is disabled before everything
 		if (spriteInfo->RotScale == 2)
@@ -1839,7 +1834,7 @@ void Screen_DeInit(void) {
 
 int GPU_ChangeGraphicsCore(int coreid)
 {
-   int i;
+   uint_fast8_t i;
 
    // Make sure the old core is freed
    if (GFXCore)
@@ -1970,7 +1965,7 @@ void GPU_ligne(NDS_Screen * screen, u16 l)
 	u8 spr[512];
 	u8 sprPrio[256];
 	u8 prio;
-	int i;
+	uint_fast16_t i;
 	int vram_bank;
 	u16 i16;
 	u32 c;
@@ -2026,7 +2021,7 @@ void GPU_ligne(NDS_Screen * screen, u16 l)
 
 	c = T1ReadWord(ARM9Mem.ARM9_VMEM, gpu->core * 0x400);
 	
-	for(uint_fast16_t i = 0; i< 256; ++i) T2WriteWord(dst, i << 1, c);
+	for(i = 0; i< 256; ++i) T2WriteWord(dst, i << 1, c);
 
 	if (!gpu->LayersEnable[0] && !gpu->LayersEnable[1] && 
 			!gpu->LayersEnable[2] && !gpu->LayersEnable[3] && 

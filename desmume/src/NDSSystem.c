@@ -138,14 +138,7 @@ copy_firmware_user_data( u8 *dest_buffer, const u8 *fw_data) {
 }
 
 
-#ifdef GDB_STUB
-int NDS_Init( struct armcpu_memory_iface *arm9_mem_if,
-              struct armcpu_ctrl_iface **arm9_ctrl_iface,
-              struct armcpu_memory_iface *arm7_mem_if,
-              struct armcpu_ctrl_iface **arm7_ctrl_iface) {
-#else
 int NDS_Init( void) {
-#endif
      nds.ARM9Cycle = 0;
      nds.ARM7Cycle = 0;
      nds.cycles = 0;
@@ -156,14 +149,9 @@ int NDS_Init( void) {
 
      if (Screen_Init(GFXCORE_DUMMY) != 0)
         return -1;
-     
- #ifdef GDB_STUB
-     armcpu_new(&NDS_ARM7,1, arm7_mem_if, arm7_ctrl_iface);
-     armcpu_new(&NDS_ARM9,0, arm9_mem_if, arm9_ctrl_iface);
-#else
+
 	 armcpu_new(&NDS_ARM7,1);
      armcpu_new(&NDS_ARM9,0);
-#endif
 
      if (SPU_Init(SNDCORE_DUMMY, 735) != 0)
         return -1;
@@ -258,38 +246,6 @@ void NDS_releasTouch(void)
      nds.touchY = 0;
      
      MMU.ARM7_REG[0x136] |= 0x40;
-}
-
-void debug()
-{
-     //if(NDS_ARM9.R[15]==0x020520DC) execute = FALSE;
-     //DSLinux
-          //if(NDS_ARM9.CPSR.bits.mode == 0) execute = FALSE;
-          //if((NDS_ARM9.R[15]&0xFFFFF000)==0) execute = FALSE;
-          //if((NDS_ARM9.R[15]==0x0201B4F4)/*&&(NDS_ARM9.R[1]==0x0)*/) execute = FALSE;
-     //AOE
-          //if((NDS_ARM9.R[15]==0x01FFE194)&&(NDS_ARM9.R[0]==0)) execute = FALSE;
-          //if((NDS_ARM9.R[15]==0x01FFE134)&&(NDS_ARM9.R[0]==0)) execute = FALSE;
-
-     //BBMAN
-          //if(NDS_ARM9.R[15]==0x02098B4C) execute = FALSE;
-          //if(NDS_ARM9.R[15]==0x02004924) execute = FALSE;
-          //if(NDS_ARM9.R[15]==0x02004890) execute = FALSE;
-     
-     //if(NDS_ARM9.R[15]==0x0202B800) execute = FALSE;
-     //if(NDS_ARM9.R[15]==0x0202B3DC) execute = FALSE;
-     //if((NDS_ARM9.R[1]==0x9AC29AC1)&&(!fait)) {execute = FALSE;fait = TRUE;}
-     //if(NDS_ARM9.R[1]==0x0400004A) {execute = FALSE;fait = TRUE;}
-     /*if(NDS_ARM9.R[4]==0x2E33373C) execute = FALSE;
-     if(NDS_ARM9.R[15]==0x02036668) //execute = FALSE;
-     {
-     nds.logcount++;
-     sprintf(logbuf, "%d %08X", nds.logcount, NDS_ARM9.R[13]);
-     log::ajouter(logbuf);
-     if(nds.logcount==89) execute=FALSE;
-     }*/
-     //if(NDS_ARM9.instruction==0) execute = FALSE;
-     //if((NDS_ARM9.R[15]>>28)) execute = FALSE;
 }
 
 #define DSGBA_EXTENSTION ".ds.gba"
@@ -920,19 +876,6 @@ NDS_exec(s32 nb, BOOL force
 		{
 			if(nds.ARM9Cycle<=nds.cycles)
 			{
-#ifdef LOG_ARM9
-				if(logcount==3){
-					if(NDS_ARM9.CPSR.bits.T)
-						des_thumb_instructions_set[(NDS_ARM9.instruction)>>6](NDS_ARM9.instruct_adr, NDS_ARM9.instruction, logbuf);
-					else
-						des_arm_instructions_set[INDEX(NDS_ARM9.instruction)](NDS_ARM9.instruct_adr, NDS_ARM9.instruction, logbuf);
-					sprintf(logbuf, "%s\t%08X\n\t R00: %08X, R01: %08X, R02: %08X, R03: %08X, R04: %08X, R05: %08X, R06: %08X, R07: %08X,\n\t R08: %08X, R09: %08X, R10: %08X, R11: %08X, R12: %08X, R13: %08X, R14: %08X, R15: %08X,\n\t CPSR: %08X , SPSR: %08X",
-						logbuf, NDS_ARM9.instruction, NDS_ARM9.R[0],  NDS_ARM9.R[1],  NDS_ARM9.R[2],  NDS_ARM9.R[3],  NDS_ARM9.R[4],  NDS_ARM9.R[5],  NDS_ARM9.R[6],  NDS_ARM9.R[7], 
-						NDS_ARM9.R[8],  NDS_ARM9.R[9],  NDS_ARM9.R[10],  NDS_ARM9.R[11],  NDS_ARM9.R[12],  NDS_ARM9.R[13],  NDS_ARM9.R[14],  NDS_ARM9.R[15],
-						NDS_ARM9.CPSR, NDS_ARM9.SPSR);  
-					LOG(logbuf);
-				}
-#endif
 				for (i = 0; i < 4 && (!force) && (execute); i++)
 				{
 					if(NDS_ARM9.waitIRQ)
@@ -953,19 +896,6 @@ NDS_exec(s32 nb, BOOL force
 #endif
 			if(nds.ARM7Cycle<=nds.cycles)
 			{
-#ifdef LOG_ARM7
-				if(logcount==1){
-					if(NDS_ARM7.CPSR.bits.T)
-						des_thumb_instructions_set[(NDS_ARM7.instruction)>>6](NDS_ARM7.instruct_adr, NDS_ARM7.instruction, logbuf);
-					else
-						des_arm_instructions_set[INDEX(NDS_ARM7.instruction)](NDS_ARM7.instruct_adr, NDS_ARM7.instruction, logbuf);
-					sprintf(logbuf, "%s\n\t R00: %08X, R01: %08X, R02: %08X, R03: %08X, R04: %08X, R05: %08X, R06: %08X, R07: %08X,\n\t R08: %08X, R09: %08X, R10: %08X, R11: %08X, R12: %08X, R13: %08X, R14: %08X, R15: %08X,\n\t CPSR: %08X , SPSR: %08X",
-						logbuf, NDS_ARM7.R[0],  NDS_ARM7.R[1],  NDS_ARM7.R[2],  NDS_ARM7.R[3],  NDS_ARM7.R[4],  NDS_ARM7.R[5],  NDS_ARM7.R[6],  NDS_ARM7.R[7], 
-						NDS_ARM7.R[8],  NDS_ARM7.R[9],  NDS_ARM7.R[10],  NDS_ARM7.R[11],  NDS_ARM7.R[12],  NDS_ARM7.R[13],  NDS_ARM7.R[14],  NDS_ARM7.R[15],
-						NDS_ARM7.CPSR, NDS_ARM7.SPSR);  
-					LOG(logbuf);
-				}
-#endif
 				for (i = 0; i < 4 && (!force) && (execute); i++)
 				{
 					if(NDS_ARM7.waitIRQ)
@@ -978,9 +908,7 @@ NDS_exec(s32 nb, BOOL force
 		}
 
 		nds.cycles = (nds.ARM9Cycle<nds.ARM7Cycle)?nds.ARM9Cycle : nds.ARM7Cycle;
-                 
-      //debug();
-                 
+
       if(nds.cycles>=nds.nextHBlank)
         {
           if(!nds.lignerendu)
@@ -1570,11 +1498,7 @@ NDS_exec(s32 nb, BOOL force
         
 		if((MMU.reg_IF[0]&MMU.reg_IE[0]) && (MMU.reg_IME[0]))
 		{
-#ifdef GDB_STUB
-			if ( armcpu_flagIrq( &NDS_ARM9)) 
-#else
 			if ( armcpu_irqExeption(&NDS_ARM9))
-#endif
 			{
 				nds.ARM9Cycle = nds.cycles;
 			}
@@ -1582,11 +1506,7 @@ NDS_exec(s32 nb, BOOL force
 
 		if((MMU.reg_IF[1]&MMU.reg_IE[1]) && (MMU.reg_IME[1]))
 		{
-#ifdef GDB_STUB
-			if ( armcpu_flagIrq( &NDS_ARM7)) 
-#else
 			if ( armcpu_irqExeption(&NDS_ARM7))
-#endif
 			{
 				nds.ARM7Cycle = nds.cycles;
 			}

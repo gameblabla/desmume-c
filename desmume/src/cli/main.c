@@ -78,17 +78,70 @@ static const uint32_t TblSkip[5][5] = {
 };
 #endif
 
+
+#ifdef GKD350H
+uint_fast8_t fullscreen_option = 1;
+void Set_Offset(void)
+{
+	uint_fast8_t i;
+	switch(fullscreen_option)
+	{
+		case 0:
+			MOUSE_X_OFFSET = 80;
+			MOUSE_Y_OFFSET = 120;
+			RESOLUTION_WIDTH = 160.0f;
+			RESOLUTION_HEIGHT = 120.0f;
+		break;
+		case 1:
+			MOUSE_X_OFFSET = 32;
+			MOUSE_Y_OFFSET = 48;
+			RESOLUTION_WIDTH = 256.0f;
+			RESOLUTION_HEIGHT = 192.0f;
+		break;
+		case 2:
+			MOUSE_X_OFFSET = 32;
+			MOUSE_Y_OFFSET = 48;
+			RESOLUTION_WIDTH = 256.0f;
+			RESOLUTION_HEIGHT = 192.0f;
+		break;
+	}
+	for(i=0;i<3;i++)
+	{
+		SDL_FillRect(rl_screen, NULL, 0);
+		SDL_Flip(rl_screen);
+	}
+}
+#endif
+
 static void Draw( void)
 {
 #ifdef GKD350H
 	SDL_Rect rct;
+	SDL_Rect rct2, pos;
+	rct2.x = 0;
+	rct2.y = 192-48;
+	rct2.w = 256;
+	rct2.h = 240;
+	pos.x = 32;
+	pos.y = 0;
 	rct.x = emulated_touch_x;
 	rct.y = emulated_touch_y;
 #ifdef FRAMESKIP
 	if (!TblSkip[FrameSkip][SkipCnt])
 #endif
 	{
-		scale_256x384_to_160x240((uint32_t* restrict)rl_screen->pixels, (uint32_t* restrict)sdl_screen->pixels);
+		switch(fullscreen_option)
+		{
+			default:
+				scale_256x384_to_160x240((uint32_t* restrict)rl_screen->pixels, (uint32_t* restrict)sdl_screen->pixels);
+			break;
+			case 1:
+				SDL_BlitSurface(sdl_screen, NULL, rl_screen, &pos);
+			break;
+			case 2:
+				SDL_BlitSurface(sdl_screen, &rct2, rl_screen, &pos);
+			break;
+		}
 		if (mouse_mode) SDL_BlitSurface(cursor_sdl, NULL, rl_screen, &rct);
 		SDL_Flip(rl_screen);
 	}

@@ -193,8 +193,6 @@ void ZIPROMReaderDeInit(void * file)
 
 u32 ZIPROMReaderSize(void * file)
 {
-	char useless[1024];
-	u32 tmp;
 	u32 size = 0;
 
 	zzip_seek(file, 0, SEEK_END);

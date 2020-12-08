@@ -25,16 +25,19 @@
 #define DEADZONE_JOYSTICK 8192
 
 #if (defined(SDL_SWIZZLEBGR) || defined(GKD350H))
+extern SDL_Surface* sdl_screen;
 int_fast16_t emulated_touch_x = 82;
 int_fast16_t emulated_touch_y = 122;
 static int_fast16_t scaled_x = 0;
 static int_fast16_t scaled_y = 0;
 uint_fast8_t mouse_mode = 0;
 #ifdef GKD350H
-#define MOUSE_X_OFFSET 80
-#define MOUSE_Y_OFFSET 120
-#define RESOLUTION_WIDTH 160.0f
-#define RESOLUTION_HEIGHT 120.0f
+uint_fast8_t MOUSE_X_OFFSET = 80;
+uint_fast8_t MOUSE_Y_OFFSET = 120;
+float RESOLUTION_WIDTH = 160.0f;
+float RESOLUTION_HEIGHT = 120.0f;
+extern void Set_Offset(void);
+extern uint_fast8_t fullscreen_option;
 #else
 #define MOUSE_X_OFFSET 0
 #define MOUSE_Y_OFFSET 192
@@ -95,20 +98,20 @@ void set_mouse_coord(int_fast16_t x, int_fast16_t y)
 /* Update NDS keypad */
 void update_keypad(u16 keys)
 {
-  ((u16 *)ARM9Mem.ARM9_REG)[0x130>>1] = ~keys & 0x3FF;
-  ((u16 *)MMU.ARM7_REG)[0x130>>1] = ~keys & 0x3FF;
-  /* Update X and Y buttons */
-  MMU.ARM7_REG[0x136] = ( ~( keys >> 10) & 0x3 ) | (MMU.ARM7_REG[0x136] & ~0x3);
+	((u16 *)ARM9Mem.ARM9_REG)[0x130>>1] = ~keys & 0x3FF;
+	((u16 *)MMU.ARM7_REG)[0x130>>1] = ~keys & 0x3FF;
+	/* Update X and Y buttons */
+	MMU.ARM7_REG[0x136] = ( ~( keys >> 10) & 0x3 ) | (MMU.ARM7_REG[0x136] & ~0x3);
 }
 
 /* Retrieve current NDS keypad */
 u16 get_keypad( void)
 {
-  u16 keypad;
-  keypad = ~MMU.ARM7_REG[0x136];
-  keypad = (keypad & 0x3) << 10;
-  keypad |= ~((u16 *)ARM9Mem.ARM9_REG)[0x130>>1] & 0x3FF;
-  return keypad;
+	u16 keypad;
+	keypad = ~MMU.ARM7_REG[0x136];
+	keypad = (keypad & 0x3) << 10;
+	keypad |= ~((u16 *)ARM9Mem.ARM9_REG)[0x130>>1] & 0x3FF;
+	return keypad;
 }
 
 #if defined(SDL_SWIZZLEBGR) || defined(GKD350H)
@@ -126,9 +129,9 @@ process_ctrls_events( u16 *keypad,
 	int cause_quit = 0;
 	SDL_Event event;
 
+	#if (defined(SDL_SWIZZLEBGR) || defined(GKD350H))
 	uint8_t* keys;
 	keys = SDL_GetKeyState(NULL);
-	
 	/* Required for say, holding the save slot in Bomberman DS */
 	if (mouse_mode == 1)
 	{
@@ -140,17 +143,8 @@ process_ctrls_events( u16 *keypad,
 			scaled_y = (emulated_touch_y - MOUSE_Y_OFFSET) * (192.0f / RESOLUTION_HEIGHT);
 			set_mouse_coord(scaled_x, scaled_y);
 		}
-#ifdef GKD350H
-		else if (keys[SDLK_BACKSPACE] && keys[SDLK_LALT]) mouse_mode = 0;
-#endif
 	}
-#ifdef GKD350H
-	else
-	{
-		if (keys[SDLK_TAB] && keys[SDLK_LALT]) mouse_mode = 1;
-		else if (keys[SDLK_RETURN] && keys[SDLK_ESCAPE]) cause_quit = 1;
-	}
-#endif
+	#endif
 
 	/* There's an event waiting to be processed? */
 	while (SDL_PollEvent(&event))
@@ -170,9 +164,29 @@ process_ctrls_events( u16 *keypad,
 				if (mouse_mode == 0) key |= 1;
 				break;
 				case SDLK_LALT:
+					#ifdef GKD350H
+					if (keys[SDLK_ESCAPE])
+					{
+						fullscreen_option++;
+						if (fullscreen_option > 2) fullscreen_option = 0;
+						Set_Offset();
+					}
+					else if (keys[SDLK_TAB])
+					{
+						mouse_mode ^= 1;
+					}
+					else
+					#endif
 					key |= 2;
 				break;
 				case SDLK_ESCAPE:
+					#ifdef GKD350H
+					if (keys[SDLK_RETURN])
+					{
+						cause_quit = 1;
+					}
+					else 
+					#endif
 					key |= 4;
 				break;
 				case SDLK_RETURN:
@@ -322,10 +336,10 @@ process_ctrls_events( u16 *keypad,
 	if (yaxis < -DEADZONE_JOYSTICK) emulated_touch_y = emulated_touch_y - 2;
 	else if (yaxis > DEADZONE_JOYSTICK) emulated_touch_y = emulated_touch_y + 2;
 	
-	if (emulated_touch_y < 120+1) emulated_touch_y = 120+1;
-	if (emulated_touch_y > 240) emulated_touch_y = 240;
-	if (emulated_touch_x < 80+1) emulated_touch_x = 80+1;
-	if (emulated_touch_x > 240-10) emulated_touch_x = 240-10;
+	if (emulated_touch_y < MOUSE_Y_OFFSET+1) emulated_touch_y = MOUSE_Y_OFFSET+1;
+	if (emulated_touch_y > sdl_screen->h) emulated_touch_y = sdl_screen->h;
+	if (emulated_touch_x < MOUSE_X_OFFSET+1) emulated_touch_x = MOUSE_X_OFFSET+1;
+	if (emulated_touch_x > (RESOLUTION_WIDTH+MOUSE_X_OFFSET)-10) emulated_touch_x = (RESOLUTION_WIDTH+MOUSE_X_OFFSET)-10;
 	#endif
 
 	return cause_quit;

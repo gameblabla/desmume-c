@@ -54,6 +54,13 @@
 #define KEY_DEBUG		13
 #define KEY_BOOST		14
 
+#ifdef GKD350H
+extern uint_fast8_t MOUSE_X_OFFSET;
+extern uint_fast8_t MOUSE_Y_OFFSET;
+extern float RESOLUTION_WIDTH;
+extern float RESOLUTION_HEIGHT;
+#endif
+
 #if defined(SDL_SWIZZLEBGR) || defined(GKD350H)
 extern int_fast16_t emulated_touch_x;
 extern int_fast16_t emulated_touch_y;

@@ -326,7 +326,7 @@ u16 SPU_ReadWord(u32 addr)
             return T1ReadWord(MMU.ARM7_REG, addr);
          case 0x2:
          {
-            channel_struct *chan=&SPU->chan[(addr >> 4) & 0xF]; 
+            //channel_struct *chan=&SPU->chan[(addr >> 4) & 0xF]; 
 //            LOG("Sound Channel %d Panning/Wave Duty/Repeat Mode/Format/Start word read\n", (addr >> 4) & 0xF);
             return T1ReadWord(MMU.ARM7_REG, addr);
          }

@@ -3321,9 +3321,9 @@ void FASTCALL MMU_write32(u32 proc, u32 adr, u32 val)
 						MMU_write8(proc,adr,val & 0xFF) ;
 						return ;
 
-								case REG_IME : {
-							u32 old_val = MMU.reg_IME[proc];
-						u32 new_val = val & 1;
+						case REG_IME : {
+						old_val = MMU.reg_IME[proc];
+						new_val = val & 1;
 						MMU.reg_IME[proc] = new_val;
 						T1WriteLong(MMU.MMU_MEM[proc][0x40], 0x208, val);
 						if ( new_val && old_val != new_val) {
@@ -3356,8 +3356,8 @@ void FASTCALL MMU_write32(u32 proc, u32 adr, u32 val)
 					case REG_TM2CNTL:
 					case REG_TM3CNTL:
 					{
-						int timerIndex = (adr>>2)&0x3;
-						int mask = ((val & 0x800000)>>(16+7)) << (timerIndex+(proc<<2));
+						timerIndex = (adr>>2)&0x3;
+						mask = ((val & 0x800000)>>(16+7)) << (timerIndex+(proc<<2));
 						MMU.CheckTimers = (MMU.CheckTimers & (~mask)) | mask;
 
 						MMU.timerReload[proc][timerIndex] = (u16)val;

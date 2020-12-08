@@ -238,7 +238,7 @@ extern BOOL execute;
 
 static u32 FASTCALL  OP_UND(armcpu_t *cpu)
 {
-	u32 i = cpu->instruction;
+	//u32 i = cpu->instruction;
 	//LOG("Undefined instruction: %08X\n", i);
 	execute = FALSE;
 	//LOG("Stopped (OP_UND)\n");
