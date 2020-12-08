@@ -78,7 +78,7 @@ static const uint32_t TblSkip[5][5] = {
 
 
 #ifdef GKD350H
-uint_fast8_t fullscreen_option = 2;
+uint_fast8_t fullscreen_option = 0;
 void Set_Offset(void)
 {
 	uint_fast8_t i;
@@ -251,6 +251,10 @@ int main(int argc, char ** argv) {
 
 	/* Initialize joysticks */
 	if(!init_joy()) return 1;
+	
+	#ifdef GKD350H
+	Set_Offset();
+	#endif
 
 	while(!sdl_quit)
 	{
