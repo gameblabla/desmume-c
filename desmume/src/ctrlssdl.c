@@ -128,7 +128,7 @@ process_ctrls_events( u16 *keypad,
 {
 	int cause_quit = 0;
 	SDL_Event event;
-
+	
 	#if (defined(SDL_SWIZZLEBGR) || defined(GKD350H))
 	uint8_t* keys;
 	keys = SDL_GetKeyState(NULL);
@@ -180,7 +180,7 @@ process_ctrls_events( u16 *keypad,
 					#if defined(SDL_SWIZZLEBGR) || defined(GKD350H)
 					else if (keys[SDLK_TAB])
 					{
-						mouse_mode ^= 1;
+						mouse_mode ^= 1; *keypad &= ~1;
 					}
 					else
 					#endif
