@@ -27,7 +27,7 @@
 static int_fast16_t scaled_x;
 static int_fast16_t scaled_y;
 
-#if (defined(SDL_SWIZZLEBGR) || defined(GKD350H))
+#if (defined(SDL_SWIZZLEBGR) || defined(GKD350H) || defined(FUNKEY))
 extern SDL_Surface* sdl_screen;
 int_fast16_t emulated_touch_x = 82;
 int_fast16_t emulated_touch_y = 122;
@@ -39,6 +39,11 @@ float RESOLUTION_WIDTH;
 float RESOLUTION_HEIGHT;
 extern void Set_Offset(void);
 extern uint_fast8_t fullscreen_option;
+#elif defined(FUNKEY)
+#define MOUSE_X_OFFSET 40
+#define MOUSE_Y_OFFSET 120
+#define RESOLUTION_WIDTH 160.0f
+#define RESOLUTION_HEIGHT 120.0f
 #else
 #define MOUSE_X_OFFSET 0
 #define MOUSE_Y_OFFSET 192
@@ -71,7 +76,7 @@ void uninit_joy( void)
 	SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
 }
 
-#if !(defined(SDL_SWIZZLEBGR) || defined(GKD350H))
+#if !(defined(SDL_SWIZZLEBGR) || defined(GKD350H) || defined(FUNKEY))
 static int_fast16_t
 screen_to_touch_range_x( int_fast16_t scr_x, float size_ratio) {
   int_fast16_t touch_x = (int_fast16_t)((float)scr_x * size_ratio);
@@ -115,7 +120,7 @@ u16 get_keypad( void)
 	return keypad;
 }
 
-#if defined(SDL_SWIZZLEBGR) || defined(GKD350H)
+#if defined(SDL_SWIZZLEBGR) || defined(GKD350H) || defined(FUNKEY)
 static int_fast16_t xaxis = 0;
 static int_fast16_t yaxis = 0;
 #endif
@@ -129,7 +134,7 @@ process_ctrls_events( u16 *keypad,
 	int cause_quit = 0;
 	SDL_Event event;
 	
-	#if (defined(SDL_SWIZZLEBGR) || defined(GKD350H))
+	#if (defined(SDL_SWIZZLEBGR) || defined(GKD350H) || defined(FUNKEY))
 	uint8_t* keys;
 	keys = SDL_GetKeyState(NULL);
 	/* Required for say, holding the save slot in Bomberman DS */
@@ -161,7 +166,7 @@ process_ctrls_events( u16 *keypad,
 			switch(event.key.keysym.sym)
 			{
 				case SDLK_LCTRL:
-					#if defined(SDL_SWIZZLEBGR) || defined(GKD350H)
+					#if (defined(SDL_SWIZZLEBGR) || defined(GKD350H) || defined(FUNKEY))
 					if (mouse_mode == 0) 
 					#endif
 					{
@@ -176,11 +181,13 @@ process_ctrls_events( u16 *keypad,
 						if (fullscreen_option > 2) fullscreen_option = 0;
 						Set_Offset();
 					}
+					else
 					#endif
-					#if defined(SDL_SWIZZLEBGR) || defined(GKD350H)
-					else if (keys[SDLK_TAB])
+					#if (defined(SDL_SWIZZLEBGR) || defined(GKD350H) || defined(FUNKEY))
+					if (keys[SDLK_TAB])
 					{
-						mouse_mode ^= 1; *keypad &= ~1;
+						mouse_mode ^= 1;
+						*keypad &= ~1;
 					}
 					else
 					#endif
@@ -200,15 +207,31 @@ process_ctrls_events( u16 *keypad,
 					*keypad |= 8;
 				break;
 				case SDLK_LEFT:
+					#ifdef FUNKEY
+					if (mouse_mode) xaxis = -16000;
+					else
+					#endif
 					*keypad |= 32;
 				break;
 				case SDLK_RIGHT:
+					#ifdef FUNKEY
+					if (mouse_mode) xaxis = 16000;
+					else
+					#endif
 					*keypad |= 16;
 				break;
 				case SDLK_UP:
+					#ifdef FUNKEY
+					if (mouse_mode) yaxis = -16000;
+					else
+					#endif
 					*keypad |= 64;
 				break;
 				case SDLK_DOWN:
+					#ifdef FUNKEY
+					if (mouse_mode) yaxis = 16000;
+					else
+					#endif
 					*keypad |= 128;
 				break;
 				case SDLK_BACKSPACE:
@@ -237,7 +260,7 @@ process_ctrls_events( u16 *keypad,
 			switch(event.key.keysym.sym)
 			{
 				case SDLK_LCTRL:
-				#if defined(SDL_SWIZZLEBGR) || defined(GKD350H)
+				#if (defined(SDL_SWIZZLEBGR) || defined(GKD350H) || defined(FUNKEY))
 				if (mouse_mode)
 				{
 					mouse.click = 1;
@@ -257,15 +280,31 @@ process_ctrls_events( u16 *keypad,
 					*keypad &= ~8;
 				break;
 				case SDLK_LEFT:
+					#ifdef FUNKEY
+					if (mouse_mode) xaxis = 0;
+					else
+					#endif
 					*keypad &= ~32;
 				break;
 				case SDLK_RIGHT:
+					#ifdef FUNKEY
+					if (mouse_mode) xaxis = 0;
+					else
+					#endif
 					*keypad &= ~16;
 				break;
 				case SDLK_UP:
+					#ifdef FUNKEY
+					if (mouse_mode) yaxis = 0;
+					else
+					#endif
 					*keypad &= ~64;
 				break;
 				case SDLK_DOWN:
+					#ifdef FUNKEY
+					if (mouse_mode) yaxis = 0;
+					else
+					#endif
 					*keypad &= ~128;
 				break;
 				case SDLK_BACKSPACE:
@@ -302,7 +341,7 @@ process_ctrls_events( u16 *keypad,
 				}
 			break;
 			#endif
-		  #if !(defined(SDL_SWIZZLEBGR) || defined(GKD350H))
+		  #if !(defined(SDL_SWIZZLEBGR) || defined(GKD350H) || defined(FUNKEY))
           case SDL_MOUSEBUTTONDOWN:
             if(event.button.button==1)
               mouse.down = TRUE;
@@ -337,7 +376,7 @@ process_ctrls_events( u16 *keypad,
           }
 	}
 
-	#if defined(SDL_SWIZZLEBGR) || defined(GKD350H)
+	#if (defined(SDL_SWIZZLEBGR) || defined(GKD350H) || defined(FUNKEY))
 	if (xaxis < -DEADZONE_JOYSTICK) emulated_touch_x = emulated_touch_x - 2;
 	else if (xaxis > DEADZONE_JOYSTICK)  emulated_touch_x = emulated_touch_x + 2;
 

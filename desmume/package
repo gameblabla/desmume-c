@@ -26,6 +26,7 @@ Icon=icon
 Terminal=false
 Type=Application
 Categories=emulators;
+SelectorFilter=nds
 X-OD-NeedsDownscaling=true' > opk/default."$1".desktop
 
 mksquashfs ./opk lameds_"$1".opk -all-root -noappend -no-exports -no-xattrs

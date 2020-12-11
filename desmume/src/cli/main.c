@@ -34,7 +34,7 @@
 #include "../sndsdl.h"
 #include "../ctrlssdl.h"
 #include "../render3D.h"
-#ifdef GKD350H
+#if defined(GKD350H) || defined(FUNKEY)
 #include "scalers.h"
 #endif
 //#include "../opengl_collector_3Demu.h"
@@ -133,17 +133,30 @@ static void Draw( void)
 			default:
 				scale_256x384_to_160x240((uint32_t* restrict)rl_screen->pixels, (uint32_t* restrict)sdl_screen->pixels);
 			break;
+			#ifndef FUNKEY
 			case 1:
 				SDL_BlitSurface(sdl_screen, NULL, rl_screen, &pos);
 			break;
 			case 2:
 				SDL_BlitSurface(sdl_screen, &rct2, rl_screen, &pos);
 			break;
+			#endif
 		}
 		if (mouse_mode) SDL_BlitSurface(cursor_sdl, NULL, rl_screen, &rct);
 		SDL_Flip(rl_screen);
 	}
-#else
+#elif defined(FUNKEY)
+	SDL_Rect rct;
+	rct.x = emulated_touch_x;
+	rct.y = emulated_touch_y;
+#ifdef FRAMESKIP
+	if (!TblSkip[FrameSkip][SkipCnt])
+#endif
+	{
+		scale_256x384_to_160x240((uint32_t* restrict)rl_screen->pixels, (uint32_t* restrict)sdl_screen->pixels);
+		if (mouse_mode) SDL_BlitSurface(cursor_sdl, NULL, rl_screen, &rct);
+		SDL_Flip(rl_screen);
+	}
 #ifdef SDL_SWIZZLEBGR
 	SDL_Rect rct;
 	rct.x = emulated_touch_x;
@@ -152,7 +165,7 @@ static void Draw( void)
 	if (!TblSkip[FrameSkip][SkipCnt])
 #endif
 	{
-		if (mouse_mode) SDL_BlitSurface(cursor_sdl, NULL, rl_screen, &rct);
+		if (mouse_mode) SDL_BlitSurface(cursor_sdl, NULL, sdl_screen, &rct);
 		SDL_Flip(sdl_screen);
 	}
 #else
@@ -165,14 +178,14 @@ static void Draw( void)
 
 static void Cleanup_emu(void)
 {
-#if defined(SDL_SWIZZLEBGR) || !defined(GKD350H)
+#if defined(SDL_SWIZZLEBGR) || !defined(GKD350H) && !defined(FUNKEY)
 	if (sdl_screen) SDL_FreeSurface(sdl_screen);
 #else
 	if (rl_screen) SDL_FreeSurface(rl_screen);
 	if (sdl_screen) SDL_FreeSurface(sdl_screen);
 #endif
 
- #if defined(GKD350H) || defined(SDL_SWIZZLEBGR)
+#if defined(GKD350H) || defined(SDL_SWIZZLEBGR) || defined(FUNKEY)
 	if (cursor_sdl) SDL_FreeSurface(cursor_sdl);
 #endif
 	/* Unload joystick */
@@ -202,6 +215,10 @@ int main(int argc, char ** argv) {
 	SDL_ShowCursor(0);
 	rl_screen = SDL_SetVideoMode(320, 240, 16, SDL_HWSURFACE | SDL_TRIPLEBUF);
 	sdl_screen = SDL_CreateRGBSurface(SDL_HWSURFACE, 256, 384, 16, 0x001F, 0x03E0, 0x7C00, 0);
+#elif defined(FUNKEY)
+	SDL_ShowCursor(0);
+	rl_screen = SDL_SetVideoMode(240, 240, 16, SDL_HWSURFACE | SDL_TRIPLEBUF);
+	sdl_screen = SDL_CreateRGBSurface(SDL_HWSURFACE, 256, 384, 16, 0x001F, 0x03E0, 0x7C00, 0);
 #else
 #ifdef SDL_SWIZZLEBGR
 	SDL_ShowCursor(0);
@@ -218,7 +235,7 @@ int main(int argc, char ** argv) {
 		return 1;
     }
     
-    #if defined(GKD350H) || defined(SDL_SWIZZLEBGR)
+    #if defined(GKD350H) || defined(SDL_SWIZZLEBGR) || defined(FUNKEY)
     SDL_Surface* tmp = SDL_LoadBMP("cursor.bmp");
     SDL_SetColorKey(tmp, (SDL_SRCCOLORKEY | SDL_RLEACCEL), SDL_MapRGB(tmp->format, 255, 0, 0));
 	cursor_sdl = SDL_DisplayFormat(tmp);

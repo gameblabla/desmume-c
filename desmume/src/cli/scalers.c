@@ -1,4 +1,4 @@
-#ifdef GKD350H
+#if defined(GKD350H) || defined(FUNKEY)
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -38,6 +38,15 @@
 #define WeightB2_6(A, B)  (((((cR(A) * 2) + (cR(B) * 6)) >> 3) & 0x1f) << 11 | ((((cG(A) * 2) + (cG(B) * 6)) >> 2) & 0x3f) << 5 | ((((cB(A) * 2) + (cB(B) * 6)) >> 3) & 0x1f))
 #define WeightB6_2(A, B)  (((((cR(A) * 6) + (cR(B) * 2)) >> 3) & 0x1f) << 11 | ((((cG(A) * 6) + (cG(B) * 2)) >> 2) & 0x3f) << 5 | ((((cB(A) * 6) + (cB(B) * 2)) >> 3) & 0x1f))
  
+#ifdef FUNKEY
+#define FINAL_SCREEN_WIDTH 240
+#define OFFSET_X 40
+#else
+#define FINAL_SCREEN_WIDTH 320
+#define OFFSET_X 80
+#endif
+ 
+
 void scale_256x384_to_160x240(uint32_t* restrict dst, uint32_t* restrict src)
 {
     uint16_t* Src16 = (uint16_t*) src;
@@ -48,7 +57,7 @@ void scale_256x384_to_160x240(uint32_t* restrict dst, uint32_t* restrict src)
     for (uint8_t BlockY = 0; BlockY < 48; BlockY++)
     {
         BlockSrc = Src16 + BlockY * 256 * 8;
-        BlockDst = Dst16 + 80 + BlockY * 320 * 5; // 80 is the offset for centering the image into the 320-width destination surface
+        BlockDst = Dst16 + OFFSET_X + BlockY * FINAL_SCREEN_WIDTH * 5; // 80 is the offset for centering the image into the 320-width destination surface
         for (uint8_t BlockX = 0; BlockX < 32; BlockX++)
         {
             // 8x8 to 5x5
@@ -80,78 +89,78 @@ void scale_256x384_to_160x240(uint32_t* restrict dst, uint32_t* restrict src)
             // -- Row 2 --
             a1 = *(BlockSrc + 256 *  2    );
             a2 = *(BlockSrc + 256 *  2 + 1);
-            *(BlockDst + 320 * 1    ) = WeightB2_6(Weight5_3( b1, b2), Weight5_3( a1, a2));
+            *(BlockDst + FINAL_SCREEN_WIDTH * 1    ) = WeightB2_6(Weight5_3( b1, b2), Weight5_3( a1, a2));
             a3 = *(BlockSrc + 256 *  2 + 2);
             a4 = *(BlockSrc + 256 *  2 + 3);
-            *(BlockDst + 320 * 1 + 1) = WeightB2_6(Weight2_6( b2, b3), Weight2_6( a2, a3));
+            *(BlockDst + FINAL_SCREEN_WIDTH * 1 + 1) = WeightB2_6(Weight2_6( b2, b3), Weight2_6( a2, a3));
             a5 = *(BlockSrc + 256 *  2 + 4);
-            *(BlockDst + 320 * 1 + 2) = WeightB2_6(Weight1_1( b4, b5), Weight1_1( a4, a5));
+            *(BlockDst + FINAL_SCREEN_WIDTH * 1 + 2) = WeightB2_6(Weight1_1( b4, b5), Weight1_1( a4, a5));
             a6 = *(BlockSrc + 256 *  2 + 5);
             a7 = *(BlockSrc + 256 *  2 + 6);
-            *(BlockDst + 320 * 1 + 3) = WeightB2_6(Weight6_2( b6, b7), Weight6_2( a6, a7));
+            *(BlockDst + FINAL_SCREEN_WIDTH * 1 + 3) = WeightB2_6(Weight6_2( b6, b7), Weight6_2( a6, a7));
             a8 = *(BlockSrc + 256 *  2 + 7);
-            *(BlockDst + 320 * 1 + 4) = WeightB2_6(Weight3_5( b7, b8), Weight3_5( a7, a8));
+            *(BlockDst + FINAL_SCREEN_WIDTH * 1 + 4) = WeightB2_6(Weight3_5( b7, b8), Weight3_5( a7, a8));
  
             // -- Row 3 --
             a1 = *(BlockSrc + 256 *  3    );
             a2 = *(BlockSrc + 256 *  3 + 1);
             b1 = *(BlockSrc + 256 *  4    );
             b2 = *(BlockSrc + 256 *  4 + 1);
-            *(BlockDst + 320 * 2    ) = WeightB1_1(Weight5_3( a1, a2), Weight5_3( b1, b2));
+            *(BlockDst + FINAL_SCREEN_WIDTH * 2    ) = WeightB1_1(Weight5_3( a1, a2), Weight5_3( b1, b2));
             a3 = *(BlockSrc + 256 *  3 + 2);
             b3 = *(BlockSrc + 256 *  4 + 2);
-            *(BlockDst + 320 * 2 + 1) = WeightB1_1(Weight2_6( a2, a3), Weight2_6( b2, b3));
+            *(BlockDst + FINAL_SCREEN_WIDTH * 2 + 1) = WeightB1_1(Weight2_6( a2, a3), Weight2_6( b2, b3));
             a4 = *(BlockSrc + 256 *  3 + 3);
             a5 = *(BlockSrc + 256 *  3 + 4);
             b4 = *(BlockSrc + 256 *  4 + 3);
             b5 = *(BlockSrc + 256 *  4 + 4);
-            *(BlockDst + 320 * 2 + 2) = WeightB1_1(Weight1_1( a4, a5), Weight1_1( b4, b5));
+            *(BlockDst + FINAL_SCREEN_WIDTH * 2 + 2) = WeightB1_1(Weight1_1( a4, a5), Weight1_1( b4, b5));
             a6 = *(BlockSrc + 256 *  3 + 5);
             a7 = *(BlockSrc + 256 *  3 + 6);
             b6 = *(BlockSrc + 256 *  4 + 5);
             b7 = *(BlockSrc + 256 *  4 + 6);
-            *(BlockDst + 320 * 2 + 3) = WeightB1_1(Weight6_2( a6, a7), Weight6_2( b6, b7));
+            *(BlockDst + FINAL_SCREEN_WIDTH * 2 + 3) = WeightB1_1(Weight6_2( a6, a7), Weight6_2( b6, b7));
             a8 = *(BlockSrc + 256 *  3 + 7);
             b8 = *(BlockSrc + 256 *  4 + 7);
-            *(BlockDst + 320 * 2 + 4) = WeightB1_1(Weight3_5( a7, a8), Weight3_5( b7, b8));
+            *(BlockDst + FINAL_SCREEN_WIDTH * 2 + 4) = WeightB1_1(Weight3_5( a7, a8), Weight3_5( b7, b8));
  
             // -- Row 4 --
             a1 = *(BlockSrc + 256 *  5    );
             a2 = *(BlockSrc + 256 *  5 + 1);
             b1 = *(BlockSrc + 256 *  6    );
             b2 = *(BlockSrc + 256 *  6 + 1);
-            *(BlockDst + 320 * 3    ) = WeightB6_2(Weight5_3( a1, a2), Weight5_3( b1, b2));
+            *(BlockDst + FINAL_SCREEN_WIDTH * 3    ) = WeightB6_2(Weight5_3( a1, a2), Weight5_3( b1, b2));
             a3 = *(BlockSrc + 256 *  5 + 2);
             b3 = *(BlockSrc + 256 *  6 + 2);
-            *(BlockDst + 320 * 3 + 1) = WeightB6_2(Weight2_6( a2, a3), Weight2_6( b2, b3));
+            *(BlockDst + FINAL_SCREEN_WIDTH * 3 + 1) = WeightB6_2(Weight2_6( a2, a3), Weight2_6( b2, b3));
             a4 = *(BlockSrc + 256 *  5 + 3);
             a5 = *(BlockSrc + 256 *  5 + 4);
             b4 = *(BlockSrc + 256 *  6 + 3);
             b5 = *(BlockSrc + 256 *  6 + 4);
-            *(BlockDst + 320 * 3 + 2) = WeightB6_2(Weight1_1( a4, a5), Weight1_1( b4, b5));
+            *(BlockDst + FINAL_SCREEN_WIDTH * 3 + 2) = WeightB6_2(Weight1_1( a4, a5), Weight1_1( b4, b5));
             a6 = *(BlockSrc + 256 *  5 + 5);
             a7 = *(BlockSrc + 256 *  5 + 6);
             b6 = *(BlockSrc + 256 *  6 + 5);
             b7 = *(BlockSrc + 256 *  6 + 6);
-            *(BlockDst + 320 * 3 + 3) = WeightB6_2(Weight6_2( a6, a7), Weight6_2( b6, b7));
+            *(BlockDst + FINAL_SCREEN_WIDTH * 3 + 3) = WeightB6_2(Weight6_2( a6, a7), Weight6_2( b6, b7));
             a8 = *(BlockSrc + 256 *  5 + 7);
             b8 = *(BlockSrc + 256 *  6 + 7);
-            *(BlockDst + 320 * 3 + 4) = WeightB6_2(Weight3_5( a7, a8), Weight3_5( b7, b8));
+            *(BlockDst + FINAL_SCREEN_WIDTH * 3 + 4) = WeightB6_2(Weight3_5( a7, a8), Weight3_5( b7, b8));
  
             // -- Row 5 --
             a1 = *(BlockSrc + 256 *  7    );
             a2 = *(BlockSrc + 256 *  7 + 1);
-            *(BlockDst + 320 * 4    ) = WeightB3_5(Weight5_3( b1, b2), Weight5_3( a1, a2));
+            *(BlockDst + FINAL_SCREEN_WIDTH * 4    ) = WeightB3_5(Weight5_3( b1, b2), Weight5_3( a1, a2));
             a3 = *(BlockSrc + 256 *  7 + 2);
-            *(BlockDst + 320 * 4 + 1) = WeightB3_5(Weight2_6( b2, b3), Weight2_6( a2, a3));
+            *(BlockDst + FINAL_SCREEN_WIDTH * 4 + 1) = WeightB3_5(Weight2_6( b2, b3), Weight2_6( a2, a3));
             a4 = *(BlockSrc + 256 *  7 + 3);
             a5 = *(BlockSrc + 256 *  7 + 4);
-            *(BlockDst + 320 * 4 + 2) = WeightB3_5(Weight1_1( b4, b5), Weight1_1( a4, a5));
+            *(BlockDst + FINAL_SCREEN_WIDTH * 4 + 2) = WeightB3_5(Weight1_1( b4, b5), Weight1_1( a4, a5));
             a6 = *(BlockSrc + 256 *  7 + 5);
             a7 = *(BlockSrc + 256 *  7 + 6);
-            *(BlockDst + 320 * 4 + 3) = WeightB3_5(Weight6_2( b6, b7), Weight6_2( a6, a7));
+            *(BlockDst + FINAL_SCREEN_WIDTH * 4 + 3) = WeightB3_5(Weight6_2( b6, b7), Weight6_2( a6, a7));
             a8 = *(BlockSrc + 256 *  7 + 7);
-            *(BlockDst + 320 * 4 + 4) = WeightB3_5(Weight3_5( b7, b8), Weight3_5( a7, a8));
+            *(BlockDst + FINAL_SCREEN_WIDTH * 4 + 4) = WeightB3_5(Weight3_5( b7, b8), Weight3_5( a7, a8));
  
             BlockSrc += 8;
             BlockDst += 5;

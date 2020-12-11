@@ -1,0 +1,47 @@
+# define regarding OS, which compiler to use
+CC = /opt/funkey-toolchain/usr/bin/arm-linux-gcc
+
+PRGNAME     = desmume.elf
+PROFILE		= 0
+
+# change compilation / linking flag options
+CFLAGS		= -Ofast -fdata-sections -ffunction-sections -flto -fno-PIC
+
+CFLAGS 		+= -DFASTBUILD -DHOST_LINUX=1 -D_GNU_SOURCE=1 -D_REENTRANT -DFRAMESKIP -DINLINE=inline -DFUNKEY
+CFLAGS		+= -Isrc -Isrc/cli
+
+CFLAGS		+= -fsingle-precision-constant -freorder-functions -fno-math-errno -fgcse-las -fgcse-sm -fmerge-all-constants -march=armv7-a+neon-vfpv4 -mtune=cortex-a7 -mfpu=neon-vfpv4
+
+
+ifeq ($(PROFILE), YES)
+CFLAGS 		+= -fprofile-generate -fprofile-dir=/mnt/des_gcda
+LDFLAGS     = -lc -lgcc -lSDL -lm -lasound -flto -no-pie
+else ifeq ($(PROFILE), APPLY)
+CFLAGS		+= -fprofile-use -fbranch-probabilities
+LDFLAGS     = -nodefaultlibs -lc -lgcc -lm -lSDL -lasound -Wl,-z,norelro -Wl,--hash-style=gnu -Wl,--build-id=none -Wl,-O1,--sort-common,--as-needed,--gc-sections -flto -no-pie -s
+else
+LDFLAGS     = -nodefaultlibs -lc -lgcc -lm -lSDL -lasound -Wl,-z,norelro -Wl,--hash-style=gnu -Wl,--build-id=none -Wl,-O1,--sort-common,--as-needed,--gc-sections -flto -no-pie -s
+endif
+
+ifeq ($(PROFILE), YES)
+LDFLAGS 	+= -lgcov
+endif
+
+# Files to be compiled
+SRCDIR    = ./src ./src/cli
+VPATH     = $(SRCDIR)
+SRC_C   = $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.c))
+OBJ_C   = $(notdir $(patsubst %.c, %.o, $(SRC_C)))
+OBJS     = $(OBJ_C)
+
+all: $(PRGNAME)
+
+# Rules to make executable
+$(PRGNAME): $(OBJS)  
+	$(CC) $(CFLAGS) -o $(PRGNAME) $^ $(LDFLAGS)
+
+$(OBJ_C) : %.o : %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+clean:
+	rm -f $(PRGNAME) *.o

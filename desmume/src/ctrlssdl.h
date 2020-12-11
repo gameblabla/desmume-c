@@ -59,7 +59,7 @@ extern float RESOLUTION_WIDTH;
 extern float RESOLUTION_HEIGHT;
 #endif
 
-#if defined(SDL_SWIZZLEBGR) || defined(GKD350H)
+#if (defined(SDL_SWIZZLEBGR) || defined(GKD350H) || defined(FUNKEY))
 extern int_fast16_t emulated_touch_x;
 extern int_fast16_t emulated_touch_y;
 extern uint_fast8_t mouse_mode;
