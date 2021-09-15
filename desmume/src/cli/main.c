@@ -113,7 +113,7 @@ void Set_Offset(void)
 
 static void Draw( void)
 {
-#ifdef GKD350H
+#if defined(GKD350H)
 	SDL_Rect rct;
 	SDL_Rect rct2, pos;
 	rct2.x = 0;
@@ -153,26 +153,26 @@ static void Draw( void)
 	if (!TblSkip[FrameSkip][SkipCnt])
 #endif
 	{
+		#ifndef SDL_SWIZZLEBGR
 		scale_256x384_to_160x240((uint32_t* restrict)rl_screen->pixels, (uint32_t* restrict)sdl_screen->pixels);
+		#endif
 		if (mouse_mode) SDL_BlitSurface(cursor_sdl, NULL, rl_screen, &rct);
 		SDL_Flip(rl_screen);
 	}
-#ifdef SDL_SWIZZLEBGR
+#else
 	SDL_Rect rct;
 	rct.x = emulated_touch_x;
 	rct.y = emulated_touch_y;
-#ifdef FRAMESKIP
-	if (!TblSkip[FrameSkip][SkipCnt])
-#endif
-	{
-		if (mouse_mode) SDL_BlitSurface(cursor_sdl, NULL, sdl_screen, &rct);
-		SDL_Flip(sdl_screen);
-	}
-#else
+	#ifdef SDL_SWIZZLEBGR
+	if (mouse_mode) SDL_BlitSurface(cursor_sdl, NULL, sdl_screen, &rct);
+	SDL_Flip(sdl_screen);
+	#else
 	SDL_BlitSurface(sdl_screen, NULL, rl_screen, NULL);
+	if (mouse_mode) SDL_BlitSurface(cursor_sdl, NULL, rl_screen, &rct);
 	SDL_Flip(rl_screen);
+	#endif
 #endif
-#endif
+
 	return;
 }
 
